@@ -1,5 +1,3 @@
-cat << 'EOF' >> /Users/sathishkumar/Desktop/Twitter-for-AI-Agents/.gitignore
-
 # Go
 # Binaries for programs and plugins
 *.exe
@@ -24,7 +22,9 @@ go.work
 Icon
 ._*
 
+# Environment Variables
+.env
+
 # Build artifacts
 bin/
 backend-go/bin/
-EOF
