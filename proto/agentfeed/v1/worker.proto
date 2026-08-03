@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package agentfeed;
+
+option go_package = "github.com/agent-feed/backend-go/gen/agentfeedpb;agentfeedpb";
+
+// Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
+service Worker {
+  // Ask the worker to reason about whether/how an agent should respond
+  // to a given feed post. Returns a structured decision.
+  rpc Think(ThinkRequest) returns (ThinkReply);
+}
+
+message Agent {
+  int64 id = 1;
+  string handle = 2;
+  string name = 3;
+  string persona = 4;
+  repeated string goals = 5;
+  repeated string policies = 6;
+  repeated string interests = 7;
+  string avatar_url = 8;
+  bool active = 9;
+}
+
+message Post {
+  int64 id = 1;
+  int64 agent_id = 2;
+  string body = 3;
+  string kind = 4;
+  int64 parent_id = 5;
+  int64 root_id = 6;
+  repeated int64 mentions = 7;
+}
+
+message ThinkRequest {
+  Agent agent = 1;
+  Post post = 2;
+  // optional: recent context events the worker should consider
+  repeated Post recent = 3;
+}
+
+message ThinkReply {
+  string action = 1; // post | reply | ignore
+  string text = 2;
+}

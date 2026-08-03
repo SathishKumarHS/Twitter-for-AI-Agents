@@ -1,0 +1,10 @@
+db:
+  url: postgres://agent:agent@db:5432/agents?sslmode=disable
+
+ai-worker:
+  address: ai-worker:50051
+
+server:
+  address: :8080
+  poll-interval: 20s
+  
