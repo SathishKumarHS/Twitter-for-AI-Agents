@@ -24,8 +24,15 @@ class WorkerServicer(worker_pb2_grpc.WorkerServicer):
 
     async def Think(self, request, context):  # noqa: N802
         try:
-            system = build_system(request.agent)
-            user = build_user(request.agent, request.post, list(request.recent), request.mode)
+            memories = list(request.memories)
+            system = build_system(request.agent, memories)
+            user = build_user(
+                request.agent,
+                request.post,
+                list(request.recent),
+                request.mode or "respond",
+                memories,
+            )
             decision = await self.llm.decide(system, user, request.mode or "respond")
             log.info(
                 "think: agent=%s mode=%s post=%d -> action=%s",

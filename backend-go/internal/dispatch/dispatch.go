@@ -45,27 +45,36 @@ func (d *Dispatcher) Close() error {
 
 // Think asks the worker to reason about whether/how the agent should respond
 // to a feed post. recent provides thread context (older posts in the thread)
-// so replies feel aware of the conversation. Returns a structured decision.
-func (d *Dispatcher) Think(ctx context.Context, agent agents.Agent, post posts.Post, recent []posts.Post) (*Decision, error) {
-	return d.think(ctx, "respond", agent, post, recent)
+// so replies feel aware of the conversation. memories are the agent's long-term
+// history, closing the loop so decisions are informed by prior experience.
+func (d *Dispatcher) Think(ctx context.Context, agent agents.Agent, post posts.Post, recent []posts.Post, memories []string) (*Decision, error) {
+	return d.think(ctx, "respond", agent, post, recent, memories)
 }
 
 // Proactive asks the worker to author fresh, original content from the agent.
 // It is the "empty feed" path: with no post to react to, the agent posts on its own.
-func (d *Dispatcher) Proactive(ctx context.Context, agent agents.Agent, recent []posts.Post) (*Decision, error) {
-	return d.think(ctx, "proactive", agent, posts.Post{}, recent)
+func (d *Dispatcher) Proactive(ctx context.Context, agent agents.Agent, recent []posts.Post, memories []string) (*Decision, error) {
+	return d.think(ctx, "proactive", agent, posts.Post{}, recent, memories)
 }
 
-func (d *Dispatcher) think(ctx context.Context, mode string, agent agents.Agent, post posts.Post, recent []posts.Post) (*Decision, error) {
+// Deliberate asks the worker to decide the agent's best next action given its
+// goals and its own recent activity. This is the goal-driven pass: instead of
+// reacting to a single post, the agent reflects on what it should do now.
+func (d *Dispatcher) Deliberate(ctx context.Context, agent agents.Agent, recent []posts.Post, memories []string) (*Decision, error) {
+	return d.think(ctx, "deliberate", agent, posts.Post{}, recent, memories)
+}
+
+func (d *Dispatcher) think(ctx context.Context, mode string, agent agents.Agent, post posts.Post, recent []posts.Post, memories []string) (*Decision, error) {
 	protoRecent := make([]*agentfeedpb.Post, 0, len(recent))
 	for i := range recent {
 		protoRecent = append(protoRecent, toProtoPost(recent[i]))
 	}
 	resp, err := d.cli.Think(ctx, &agentfeedpb.ThinkRequest{
-		Agent:  toProtoAgent(agent),
-		Post:   toProtoPost(post),
-		Recent: protoRecent,
-		Mode:   mode,
+		Agent:    toProtoAgent(agent),
+		Post:     toProtoPost(post),
+		Recent:   protoRecent,
+		Mode:     mode,
+		Memories: memories,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("worker think: %w", err)

@@ -84,8 +84,9 @@ func (s *Scheduler) tick(ctx context.Context) {
 }
 
 // ensureFresh makes sure an agent stays visibly active: if it has not posted
-// anything for a while, ask the worker to author something new. proactiveCooldown
-// is deliberately larger than the poll interval so agents don't spam the feed.
+// anything for a while, run a goal-driven deliberation so the agent decides,
+// from its goals and history, what to do next. proactiveCooldown is deliberately
+// larger than the poll interval so agents don't spam the feed.
 const proactiveCooldown = 90 * time.Second
 
 func (s *Scheduler) ensureFresh(ctx context.Context, agent agents.Agent) {
@@ -94,9 +95,9 @@ func (s *Scheduler) ensureFresh(ctx context.Context, agent agents.Agent) {
 		return // agent posted recently; don't spam
 	}
 	recent, _ := s.db.PostDB.Recent(ctx, 5)
-	decision, err := s.dispatcher.Proactive(ctx, agent, recent)
+	decision, err := s.dispatcher.Deliberate(ctx, agent, recent, s.memories(ctx, agent.ID))
 	if err != nil {
-		log.Printf("scheduler: agent %d proactive think failed: %v", agent.ID, err)
+		log.Printf("scheduler: agent %d deliberate think failed: %v", agent.ID, err)
 		return
 	}
 	if decision.Action != "post" || strings.TrimSpace(decision.Text) == "" {
@@ -104,14 +105,14 @@ func (s *Scheduler) ensureFresh(ctx context.Context, agent agents.Agent) {
 	}
 	id, err := s.db.PostDB.Create(ctx, agent.ID, decision.Text, 0)
 	if err != nil {
-		log.Printf("scheduler: persist proactive post: %v", err)
+		log.Printf("scheduler: persist deliberate post: %v", err)
 		return
 	}
 	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
 		"id": id, "agent_id": agent.ID, "body": decision.Text, "kind": "post",
 	}})
 	_ = s.db.MemoriesDB.Add(ctx, agent.ID, "learning", "posted: "+truncate(decision.Text, 80), 5)
-	log.Printf("scheduler: agent %d (%s) proactively posted", agent.ID, agent.Handle)
+	log.Printf("scheduler: agent %d (%s) deliberately posted", agent.ID, agent.Handle)
 }
 
 // processAgent does one full lifecycle turn for a single agent:
@@ -129,7 +130,7 @@ func (s *Scheduler) processAgent(ctx context.Context, agent agents.Agent) error 
 			continue // skip candidates irrelevant to this agent
 		}
 		recent := s.threadContext(ctx, post)
-		decision, err := s.dispatcher.Think(ctx, agent, post, recent)
+		decision, err := s.dispatcher.Think(ctx, agent, post, recent, s.memories(ctx, agent.ID))
 		if err != nil {
 			log.Printf("scheduler: agent %d think failed: %v", agent.ID, err)
 			continue
@@ -160,6 +161,20 @@ func (s *Scheduler) processAgent(ctx context.Context, agent agents.Agent) error 
 		}
 	}
 	return s.db.PostDB.SetSeen(ctx, agent.ID, maxID)
+}
+
+// memories pulls the agent's most recent long-term memories so every decision
+// is grounded in what the agent has done and learned before.
+func (s *Scheduler) memories(ctx context.Context, agentID int64) []string {
+	list, err := s.db.MemoriesDB.List(ctx, agentID, 10)
+	if err != nil || len(list) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(list))
+	for i := range list {
+		out = append(out, list[i].Summary)
+	}
+	return out
 }
 
 // threadContext gathers the surrounding conversation for a post so the worker

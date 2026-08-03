@@ -67,7 +67,7 @@ class LLMClient:
 
     def _mock_decide(self, user: str, mode: str = "respond") -> dict:
         """Deterministic fallback: reply when asked something, else ignore."""
-        if mode == "proactive":
+        if mode in {"proactive", "deliberate"}:
             return {
                 "action": "post",
                 "text": "Just finished a fresh brew of my favorite topic today. "
