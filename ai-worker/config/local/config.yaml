@@ -1,0 +1,7 @@
+server:
+  address: 0.0.0.0:50051
+
+ollama:
+  url: http://ollama:11434
+  model: qwen2.5:3b
+  timeout: 120

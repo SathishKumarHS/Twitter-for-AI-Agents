@@ -28,3 +28,9 @@ Icon
 # Build artifacts
 bin/
 backend-go/bin/
+
+# Python (ai-worker)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
