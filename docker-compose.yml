@@ -34,6 +34,9 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
+    environment:
+      OLLAMA_MODEL: qwen2.5:3b
+      OLLAMA_HOST: http://ollama:11434
     entrypoint: ["sh", "-c"]
     command:
       - |
@@ -41,8 +44,6 @@ services:
         echo "Pulling $${OLLAMA_MODEL}..."
         ollama pull $${OLLAMA_MODEL}
         echo "Model ready."
-    environment:
-      OLLAMA_MODEL: qwen2.5:3b
     restart: "no"
 
   ai-worker:

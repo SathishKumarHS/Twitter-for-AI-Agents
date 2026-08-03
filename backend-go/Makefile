@@ -22,3 +22,8 @@ build: proto
 	mkdir -p ../bin
 	go build -o ../bin/agent-feed-go ./cmd/server
 .PHONY: build
+
+# Build the backend-go image from the repo-root compose file.
+docker:
+	docker-compose -f ../docker-compose.yml build backend-go
+.PHONY: docker

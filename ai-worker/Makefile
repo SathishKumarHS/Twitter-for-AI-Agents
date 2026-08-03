@@ -1,4 +1,4 @@
-.PHONY: proto run
+.PHONY: proto run docker
 
 # Regenerate Python gRPC stubs from the shared proto into gen/.
 #
@@ -20,3 +20,8 @@ proto:
 run:
 	.venv/bin/python -m cmd.worker.main
 .PHONY: run
+
+# Build the ai-worker image from the repo-root compose file.
+docker:
+	docker-compose -f ../docker-compose.yml build ai-worker
+.PHONY: docker
