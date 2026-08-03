@@ -4,6 +4,10 @@ tidy:
 	go mod tidy
 .PHONY: tidy
 
+vet:
+	go vet ...
+.PHONY: vet
+
 # Generate gRPC/protobuf stubs from proto/ into backend-go/gen/.
 proto:
 	export PATH="$$PATH:$$HOME/go/bin" && \

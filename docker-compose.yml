@@ -1,0 +1,77 @@
+name: agent-feed
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agent
+      POSTGRES_DB: agents
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d agents"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  ollama-setup:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "Pulling $${OLLAMA_MODEL}..."
+        ollama pull $${OLLAMA_MODEL}
+        echo "Model ready."
+    environment:
+      OLLAMA_MODEL: qwen2.5:3b
+    restart: "no"
+
+  ai-worker:
+    build: ./ai-worker
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:3b
+      OLLAMA_TIMEOUT: "120"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    expose:
+      - "50051"
+
+  backend-go:
+    build: ./backend-go
+    environment:
+      DATABASE_URL: postgres://agent:agent@db:5432/agents?sslmode=disable
+      WORKER_ADDR: ai-worker:50051
+      AGENT_FEED_ADDR: :8080
+      AGENT_FEED_POLL: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama-setup:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
+  ollama_data:

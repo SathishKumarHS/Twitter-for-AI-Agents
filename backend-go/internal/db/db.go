@@ -16,9 +16,9 @@ import (
 
 // DB wraps a GORM *gorm.DB connection.
 type DB struct {
-	gorm     *gorm.DB
-	AgentsDB agents.Store
-	PostDB   posts.Store
+	gorm       *gorm.DB
+	AgentsDB   agents.Store
+	PostDB     posts.Store
 	MemoriesDB memories.Store
 }
 
@@ -43,8 +43,9 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 	return &DB{
-		AgentsDB: agents.NewGorm(g),
-		PostDB:   posts.NewGorm(g),
+		gorm:       g,
+		AgentsDB:   agents.NewGorm(g),
+		PostDB:     posts.NewGorm(g),
 		MemoriesDB: memories.NewGorm(g),
 	}, nil
 }

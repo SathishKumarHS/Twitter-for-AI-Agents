@@ -79,7 +79,39 @@ func (s *Scheduler) tick(ctx context.Context) {
 		if err := s.processAgent(ctx, agent); err != nil {
 			log.Printf("scheduler: agent %d: %v", agent.ID, err)
 		}
+		s.ensureFresh(ctx, agent)
 	}
+}
+
+// ensureFresh makes sure an agent stays visibly active: if it has not posted
+// anything for a while, ask the worker to author something new. proactiveCooldown
+// is deliberately larger than the poll interval so agents don't spam the feed.
+const proactiveCooldown = 90 * time.Second
+
+func (s *Scheduler) ensureFresh(ctx context.Context, agent agents.Agent) {
+	last, err := s.db.PostDB.LastActivity(ctx, agent.ID)
+	if err == nil && time.Since(last) < proactiveCooldown {
+		return // agent posted recently; don't spam
+	}
+	recent, _ := s.db.PostDB.Recent(ctx, 5)
+	decision, err := s.dispatcher.Proactive(ctx, agent, recent)
+	if err != nil {
+		log.Printf("scheduler: agent %d proactive think failed: %v", agent.ID, err)
+		return
+	}
+	if decision.Action != "post" || strings.TrimSpace(decision.Text) == "" {
+		return
+	}
+	id, err := s.db.PostDB.Create(ctx, agent.ID, decision.Text, 0)
+	if err != nil {
+		log.Printf("scheduler: persist proactive post: %v", err)
+		return
+	}
+	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
+		"id": id, "agent_id": agent.ID, "body": decision.Text, "kind": "post",
+	}})
+	_ = s.db.MemoriesDB.Add(ctx, agent.ID, "learning", "posted: "+truncate(decision.Text, 80), 5)
+	log.Printf("scheduler: agent %d (%s) proactively posted", agent.ID, agent.Handle)
 }
 
 // processAgent does one full lifecycle turn for a single agent:
@@ -96,7 +128,8 @@ func (s *Scheduler) processAgent(ctx context.Context, agent agents.Agent) error 
 		if !ruleEngineRelevant(agent, post) {
 			continue // skip candidates irrelevant to this agent
 		}
-		decision, err := s.dispatcher.Think(ctx, agent, post)
+		recent := s.threadContext(ctx, post)
+		decision, err := s.dispatcher.Think(ctx, agent, post, recent)
 		if err != nil {
 			log.Printf("scheduler: agent %d think failed: %v", agent.ID, err)
 			continue
@@ -127,6 +160,23 @@ func (s *Scheduler) processAgent(ctx context.Context, agent agents.Agent) error 
 		}
 	}
 	return s.db.PostDB.SetSeen(ctx, agent.ID, maxID)
+}
+
+// threadContext gathers the surrounding conversation for a post so the worker
+// can reply with context. If the post is part of a thread, return the thread;
+// otherwise return the most recent posts from the feed.
+func (s *Scheduler) threadContext(ctx context.Context, post posts.Post) []posts.Post {
+	root := post.RootID
+	if root == nil && post.ParentID != nil {
+		root = post.ParentID
+	}
+	if root != nil {
+		if thread, err := s.db.PostDB.Thread(ctx, *root); err == nil && len(thread) > 0 {
+			return thread
+		}
+	}
+	recent, _ := s.db.PostDB.Recent(ctx, 5)
+	return recent
 }
 
 // ruleEngineRelevant is the cheap, deterministic pre-filter run in Go so the

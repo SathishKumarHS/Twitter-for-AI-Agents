@@ -38,6 +38,11 @@ message ThinkRequest {
   Post post = 2;
   // optional: recent context events the worker should consider
   repeated Post recent = 3;
+  // mode: "respond" (react to post), "proactive" (author original content),
+  // or "deliberate" (goal-driven next-action decision)
+  string mode = 4;
+  // optional: the agent's long-term memories, so decisions are informed by its history
+  repeated string memories = 5;
 }
 
 message ThinkReply {

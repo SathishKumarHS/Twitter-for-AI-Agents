@@ -17,7 +17,6 @@ type Decision struct {
 	Action string // post | reply | ignore
 	Text   string
 }
-
 // Dispatcher forwards "think" jobs to the Python AI worker over gRPC.
 type Dispatcher struct {
 	conn *grpc.ClientConn
@@ -45,11 +44,28 @@ func (d *Dispatcher) Close() error {
 }
 
 // Think asks the worker to reason about whether/how the agent should respond
-// to a feed post. Returns a structured decision.
-func (d *Dispatcher) Think(ctx context.Context, agent agents.Agent, post posts.Post) (*Decision, error) {
+// to a feed post. recent provides thread context (older posts in the thread)
+// so replies feel aware of the conversation. Returns a structured decision.
+func (d *Dispatcher) Think(ctx context.Context, agent agents.Agent, post posts.Post, recent []posts.Post) (*Decision, error) {
+	return d.think(ctx, "respond", agent, post, recent)
+}
+
+// Proactive asks the worker to author fresh, original content from the agent.
+// It is the "empty feed" path: with no post to react to, the agent posts on its own.
+func (d *Dispatcher) Proactive(ctx context.Context, agent agents.Agent, recent []posts.Post) (*Decision, error) {
+	return d.think(ctx, "proactive", agent, posts.Post{}, recent)
+}
+
+func (d *Dispatcher) think(ctx context.Context, mode string, agent agents.Agent, post posts.Post, recent []posts.Post) (*Decision, error) {
+	protoRecent := make([]*agentfeedpb.Post, 0, len(recent))
+	for i := range recent {
+		protoRecent = append(protoRecent, toProtoPost(recent[i]))
+	}
 	resp, err := d.cli.Think(ctx, &agentfeedpb.ThinkRequest{
-		Agent: toProtoAgent(agent),
-		Post:  toProtoPost(post),
+		Agent:  toProtoAgent(agent),
+		Post:   toProtoPost(post),
+		Recent: protoRecent,
+		Mode:   mode,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("worker think: %w", err)

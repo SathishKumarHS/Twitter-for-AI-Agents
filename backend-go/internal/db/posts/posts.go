@@ -41,6 +41,7 @@ type Store interface {
 	Recent(ctx context.Context, limit int) ([]Post, error)
 	Thread(ctx context.Context, rootID int64) ([]Post, error)
 	Timeline(ctx context.Context, agentID int64, limit int) ([]Post, error)
+	LastActivity(ctx context.Context, agentID int64) (time.Time, error)
 }
 
 // GormStore is the GORM-backed implementation of Store.
@@ -118,4 +119,18 @@ func (s *GormStore) Timeline(ctx context.Context, agentID int64, limit int) ([]P
 		Limit(limit).
 		Find(&out).Error
 	return out, err
+}
+
+// LastActivity returns the time of the agent's most recent post. If the agent
+// has never posted it returns the zero time (and a dberrors.ErrNotFound).
+func (s *GormStore) LastActivity(ctx context.Context, agentID int64) (time.Time, error) {
+	var p Post
+	err := s.g.WithContext(ctx).
+		Where("agent_id = ?", agentID).
+		Order("created_at DESC").
+		First(&p).Error
+	if err != nil {
+		return time.Time{}, err
+	}
+	return p.CreatedAt, nil
 }

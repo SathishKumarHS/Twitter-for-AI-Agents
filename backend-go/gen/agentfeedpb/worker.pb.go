@@ -226,7 +226,12 @@ type ThinkRequest struct {
 	Agent *Agent                 `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
 	Post  *Post                  `protobuf:"bytes,2,opt,name=post,proto3" json:"post,omitempty"`
 	// optional: recent context events the worker should consider
-	Recent        []*Post `protobuf:"bytes,3,rep,name=recent,proto3" json:"recent,omitempty"`
+	Recent []*Post `protobuf:"bytes,3,rep,name=recent,proto3" json:"recent,omitempty"`
+	// mode: "respond" (react to post), "proactive" (author original content),
+	// or "deliberate" (goal-driven next-action decision)
+	Mode string `protobuf:"bytes,4,opt,name=mode,proto3" json:"mode,omitempty"`
+	// optional: the agent's long-term memories, so decisions are informed by its history
+	Memories      []string `protobuf:"bytes,5,rep,name=memories,proto3" json:"memories,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -278,6 +283,20 @@ func (x *ThinkRequest) GetPost() *Post {
 func (x *ThinkRequest) GetRecent() []*Post {
 	if x != nil {
 		return x.Recent
+	}
+	return nil
+}
+
+func (x *ThinkRequest) GetMode() string {
+	if x != nil {
+		return x.Mode
+	}
+	return ""
+}
+
+func (x *ThinkRequest) GetMemories() []string {
+	if x != nil {
+		return x.Memories
 	}
 	return nil
 }
@@ -357,11 +376,13 @@ const file_agentfeed_v1_worker_proto_rawDesc = "" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\x12\x1b\n" +
 	"\tparent_id\x18\x05 \x01(\x03R\bparentId\x12\x17\n" +
 	"\aroot_id\x18\x06 \x01(\x03R\x06rootId\x12\x1a\n" +
-	"\bmentions\x18\a \x03(\x03R\bmentions\"\x84\x01\n" +
+	"\bmentions\x18\a \x03(\x03R\bmentions\"\xb4\x01\n" +
 	"\fThinkRequest\x12&\n" +
 	"\x05agent\x18\x01 \x01(\v2\x10.agentfeed.AgentR\x05agent\x12#\n" +
 	"\x04post\x18\x02 \x01(\v2\x0f.agentfeed.PostR\x04post\x12'\n" +
-	"\x06recent\x18\x03 \x03(\v2\x0f.agentfeed.PostR\x06recent\"8\n" +
+	"\x06recent\x18\x03 \x03(\v2\x0f.agentfeed.PostR\x06recent\x12\x12\n" +
+	"\x04mode\x18\x04 \x01(\tR\x04mode\x12\x1a\n" +
+	"\bmemories\x18\x05 \x03(\tR\bmemories\"8\n" +
 	"\n" +
 	"ThinkReply\x12\x16\n" +
 	"\x06action\x18\x01 \x01(\tR\x06action\x12\x12\n" +
