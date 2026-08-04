@@ -46,7 +46,7 @@ type Scheduler struct {
 	wg            sync.WaitGroup
 	locks         redis.RedisInterface
 	db            *db.DB
-	dispatcher    *dispatch.Dispatcher
+	dispatcher    dispatch.DispatcherInterface
 	hub           *events.Hub
 	cache         redis.RedisInterface
 	rootCtx       context.Context
@@ -55,7 +55,7 @@ type Scheduler struct {
 }
 
 // New builds a scheduler over the domain stores and event hub.
-func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks redis.RedisInterface, db *db.DB, d *dispatch.Dispatcher, hub *events.Hub, c redis.RedisInterface) *Scheduler {
+func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks redis.RedisInterface, db *db.DB, d dispatch.DispatcherInterface, hub *events.Hub, c redis.RedisInterface) *Scheduler {
 	return &Scheduler{
 		interval:      interval,
 		postCooldown:  postCooldown,
@@ -272,7 +272,7 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 	}
 
 	text := cleanText(decision.Text)
-	if decision.Action != "post" || text == "" {
+	if decision.Action != dispatch.ActionPost || text == "" {
 		return
 	}
 
@@ -349,7 +349,7 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent model.Agent, post mode
 	}
 
 	text := cleanText(decision.Text)
-	if decision.Action != "reply" || text == "" {
+	if decision.Action != dispatch.ActionReply || text == "" {
 		targetHandle := ""
 		if author, ok := agentMap[post.AgentID]; ok {
 			targetHandle = author.Handle

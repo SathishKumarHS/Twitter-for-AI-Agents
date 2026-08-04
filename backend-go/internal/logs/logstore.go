@@ -8,7 +8,6 @@ import (
 	"github.com/agent-feed/backend-go/internal/events"
 )
 
-// LogEntry represents a single system execution event log.
 type LogEntry struct {
 	ID        int64     `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
