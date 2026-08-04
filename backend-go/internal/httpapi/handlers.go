@@ -79,7 +79,7 @@ func (s *Server) handleCreateAgent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "fetch created agent: "+err.Error())
 		return
 	}
-	s.publish(events.Event{Type: "agent:new", Data: a})
+	s.publish(events.Event{Type: events.EventAgentNew, Data: a})
 	logs.AgentInfo(a.ID, a.Name, a.Handle, "system", fmt.Sprintf("Created new AI Agent @%s (%s)", a.Handle, a.Name))
 	writeJSON(w, http.StatusCreated, a)
 }
@@ -135,7 +135,7 @@ func (s *Server) handlePauseAgent(w http.ResponseWriter, r *http.Request) {
 		_ = s.redisClient.SetAgentActive(r.Context(), id, false)
 	}
 	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) paused", agent.ID, agent.Handle))
-	s.hub.Publish(events.Event{Type: "agent:updated", Data: map[string]any{"id": id, "active": false}})
+	s.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": false}})
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "active": false})
 }
 
@@ -158,7 +158,7 @@ func (s *Server) handleResumeAgent(w http.ResponseWriter, r *http.Request) {
 		_ = s.redisClient.SetAgentActive(r.Context(), id, true)
 	}
 	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) resumed", agent.ID, agent.Handle))
-	s.hub.Publish(events.Event{Type: "agent:updated", Data: map[string]any{"id": id, "active": true}})
+	s.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": true}})
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "active": true})
 }
 

@@ -24,14 +24,14 @@ type LogStore struct {
 	mu      sync.RWMutex
 	entries []LogEntry
 	max     int
-	hub     *events.Hub
+	hub     events.HubInterface
 	counter atomic.Int64
 }
 
 // Global default log store reference
 var defaultStore *LogStore
 
-func Init(hub *events.Hub) *LogStore {
+func Init(hub events.HubInterface) *LogStore {
 	store := &LogStore{
 		entries: make([]LogEntry, 0, 500),
 		max:     500,
@@ -66,7 +66,7 @@ func (s *LogStore) Add(level, logType string, agentID int64, agentName, handle, 
 
 	if s.hub != nil {
 		s.hub.Publish(events.Event{
-			Type: "log:new",
+			Type: events.EventLogEntry,
 			Data: entry,
 		})
 	}

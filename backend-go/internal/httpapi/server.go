@@ -16,15 +16,15 @@ import (
 
 // Server serves the REST + WebSocket API for the frontend.
 type Server struct {
-	address        string
+	address     string
 	db          *db.DB
-	hub         *events.Hub
+	hub         events.HubInterface
 	redisClient redis.RedisInterface
 	srv         *http.Server
 }
 
 // New returns a configured HTTP server (not yet listening).
-func New(addr string, db *db.DB, hub *events.Hub, redisClient redis.RedisInterface) *Server {
+func New(addr string, db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface) *Server {
 	return &Server{address: addr, db: db, hub: hub, redisClient: redisClient}
 }
 

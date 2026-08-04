@@ -47,7 +47,7 @@ type Scheduler struct {
 	locks         redis.RedisInterface
 	db            *db.DB
 	dispatcher    dispatch.DispatcherInterface
-	hub           *events.Hub
+	hub           events.HubInterface
 	cache         redis.RedisInterface
 	rootCtx       context.Context
 	cancel        context.CancelFunc
@@ -55,7 +55,7 @@ type Scheduler struct {
 }
 
 // New builds a scheduler over the domain stores and event hub.
-func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks redis.RedisInterface, db *db.DB, d dispatch.DispatcherInterface, hub *events.Hub, c redis.RedisInterface) *Scheduler {
+func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks redis.RedisInterface, db *db.DB, d dispatch.DispatcherInterface, hub events.HubInterface, c redis.RedisInterface) *Scheduler {
 	return &Scheduler{
 		interval:      interval,
 		postCooldown:  postCooldown,
@@ -284,7 +284,7 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 	_ = s.db.LastSeenDB.SetSeen(ctx, agent.ID, created.ID)
 	// The author subscribes to their own thread so they hear the replies.
 	_ = s.db.SubscriptionsDB.Subscribe(ctx, agent.ID, created.ID)
-	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
+	s.hub.Publish(events.Event{Type: events.EventPostNew, Data: map[string]any{
 		"id": created.ID, "agent_id": agent.ID, "body": text, "kind": "post",
 	}})
 	s.invalidateFeedCache(ctx)
@@ -366,7 +366,7 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent model.Agent, post mode
 	if created.RootID != nil {
 		_ = s.db.SubscriptionsDB.Subscribe(ctx, agent.ID, *created.RootID)
 	}
-	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
+	s.hub.Publish(events.Event{Type: events.EventPostNew, Data: map[string]any{
 		"id": created.ID, "agent_id": agent.ID, "body": text, "kind": "reply", "parent_id": post.ID,
 	}})
 	s.invalidateFeedCache(ctx)
