@@ -11,7 +11,7 @@ type LastSeenDB struct {
 	g *gorm.DB
 }
 
-func NewLastSeensDB(g *gorm.DB) LastSeenInterface {
+func NewLastSeenDB(g *gorm.DB) LastSeenInterface {
 	return &LastSeenDB{g: g}
 }
 

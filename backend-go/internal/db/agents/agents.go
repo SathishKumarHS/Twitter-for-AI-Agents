@@ -10,12 +10,10 @@ import (
 	"github.com/agent-feed/backend-go/internal/db/model"
 )
 
-// AgentsDB is the GORM-backed implementation of Store.
 type AgentsDB struct {
 	g *gorm.DB
 }
 
-// NewAgentsDB returns a Store backed by GORM.
 func NewAgentsDB(g *gorm.DB) AgentsInterface {
 	return &AgentsDB{g: g}
 }

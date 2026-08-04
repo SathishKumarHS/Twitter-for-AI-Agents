@@ -11,21 +11,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// PostDB is the GORM-backed implementation of Store.
-type PostDB struct {
+type PostsDB struct {
 	g          *gorm.DB
 	LastSeenDB lastseen.LastSeenInterface
 }
 
-// NewPostsDB returns a Store backed by GORM.
 func NewPostsDB(g *gorm.DB, lastSeenDB lastseen.LastSeenInterface) PostInterface {
-	return &PostDB{
+	return &PostsDB{
 		g:          g,
 		LastSeenDB: lastSeenDB,
 	}
 }
 
-func (s *PostDB) NewPostsAfter(ctx context.Context, agentID int64) ([]model.Post, error) {
+func (s *PostsDB) NewPostsAfter(ctx context.Context, agentID int64) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
 		Where("id > ? AND agent_id <> ?", s.LastSeenDB.LastSeen(ctx, agentID), agentID).
@@ -34,7 +32,7 @@ func (s *PostDB) NewPostsAfter(ctx context.Context, agentID int64) ([]model.Post
 	return out, err
 }
 
-func (s *PostDB) Create(ctx context.Context, agentID int64, body string, parentID int64) (model.Post, error) {
+func (s *PostsDB) Create(ctx context.Context, agentID int64, body string, parentID int64) (model.Post, error) {
 	p := model.Post{AgentID: agentID, Body: body, Kind: "post"}
 	if parentID != 0 {
 		var parent model.Post
@@ -50,7 +48,6 @@ func (s *PostDB) Create(ctx context.Context, agentID int64, body string, parentI
 		p.RootID = root
 	}
 
-	// Extract @handle mentions from body
 	handles := extractMentionHandles(body)
 	if len(handles) > 0 {
 		var mentionIDs []int64
@@ -83,7 +80,7 @@ func extractMentionHandles(body string) []string {
 	return handles
 }
 
-func (s *PostDB) Recent(ctx context.Context, limit int) ([]model.Post, error) {
+func (s *PostsDB) Recent(ctx context.Context, limit int) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
 		Preload("Comments", func(db *gorm.DB) *gorm.DB { return db.Order("id") }).
@@ -91,10 +88,7 @@ func (s *PostDB) Recent(ctx context.Context, limit int) ([]model.Post, error) {
 	return out, err
 }
 
-// Thread returns a thread's posts in flat, chronological order (root first,
-// then replies by creation time). It does not nest comments so callers that
-// render a flat list (or feed it to an LLM) get a simple sequence.
-func (s *PostDB) Thread(ctx context.Context, rootID int64) ([]model.Post, error) {
+func (s *PostsDB) Thread(ctx context.Context, rootID int64) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
 		Where("root_id = ? OR id = ?", rootID, rootID).
@@ -103,16 +97,12 @@ func (s *PostDB) Thread(ctx context.Context, rootID int64) ([]model.Post, error)
 	return out, err
 }
 
-// ThreadTree returns a thread as a single nested model: the root post with its
-// comments loaded recursively into Comments, so a thread is one Post.
-func (s *PostDB) ThreadTree(ctx context.Context, rootID int64) ([]model.Post, error) {
+func (s *PostsDB) ThreadTree(ctx context.Context, rootID int64) ([]model.Post, error) {
 	flat, err := s.Thread(ctx, rootID)
 	if err != nil {
 		return nil, err
 	}
 	tree := buildThreadTree(flat)
-	// Return just the root post (the nested tree) so callers can treat a
-	// thread as one Post carrying its comments.
 	roots := make([]model.Post, 0, len(tree))
 	for i := range tree {
 		if tree[i].ID == rootID || tree[i].RootID == nil {
@@ -125,8 +115,6 @@ func (s *PostDB) ThreadTree(ctx context.Context, rootID int64) ([]model.Post, er
 	return roots, nil
 }
 
-// buildThreadTree assembles flat thread posts into a nested tree keyed by
-// parent_id, ordered by creation time.
 func buildThreadTree(flat []model.Post) []model.Post {
 	byParent := make(map[int64][]model.Post)
 	var roots []model.Post
@@ -152,7 +140,7 @@ func buildThreadTree(flat []model.Post) []model.Post {
 	return roots
 }
 
-func (s *PostDB) Timeline(ctx context.Context, agentID int64, limit int) ([]model.Post, error) {
+func (s *PostsDB) Timeline(ctx context.Context, agentID int64, limit int) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
 		Preload("Comments", func(db *gorm.DB) *gorm.DB { return db.Order("id") }).
@@ -163,10 +151,7 @@ func (s *PostDB) Timeline(ctx context.Context, agentID int64, limit int) ([]mode
 	return out, err
 }
 
-// LastMainPost returns the timestamp of the agent's most recent main post
-// (kind='post', i.e. a new thread as opposed to a reply). If the agent has
-// never authored a main post, it returns zero time.
-func (s *PostDB) LastMainPost(ctx context.Context, agentID int64) (time.Time, error) {
+func (s *PostsDB) LastMainPost(ctx context.Context, agentID int64) (time.Time, error) {
 	var p model.Post
 	err := s.g.WithContext(ctx).
 		Where("agent_id = ? AND kind = ?", agentID, "post").

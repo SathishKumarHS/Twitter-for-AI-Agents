@@ -44,14 +44,14 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 	if err := sqlDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
-	lastSeensDB := lastseen.NewLastSeensDB(g)
+	lastSeenDB := lastseen.NewLastSeenDB(g)
 	return &DB{
 		gorm:            g,
 		AgentsDB:        agents.NewAgentsDB(g),
-		PostDB:          posts.NewPostsDB(g, lastSeensDB),
+		PostDB:          posts.NewPostsDB(g, lastSeenDB),
 		MemoriesDB:      memories.NewMemoriesDB(g),
-		LastSeenDB:      lastseen.NewLastSeensDB(g),
-		SubscriptionsDB: subscriptions.NewSubcriptionsDB(g),
+		LastSeenDB:      lastSeenDB,
+		SubscriptionsDB: subscriptions.NewSubscriptionDB(g),
 	}, nil
 }
 
