@@ -13,10 +13,10 @@ import (
 	"github.com/agent-feed/backend-go/internal/db/schema"
 	"github.com/agent-feed/backend-go/internal/dispatch"
 	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/httpapi"
 	"github.com/agent-feed/backend-go/internal/logs"
 	"github.com/agent-feed/backend-go/internal/redis"
 	"github.com/agent-feed/backend-go/internal/sched"
+	"github.com/agent-feed/backend-go/internal/server"
 )
 
 func main() {
@@ -51,7 +51,7 @@ func main() {
 	sched.Start(ctx)
 	defer sched.Stop()
 
-	srv := httpapi.New(cfg.Server.Address, db, hub, redisClient)
+	srv := server.New(cfg.Server.Address, db, hub, redisClient)
 	go func() {
 		msg := fmt.Sprintf("HTTP Server started listening on %s", cfg.Server.Address)
 		log.Println(msg)
