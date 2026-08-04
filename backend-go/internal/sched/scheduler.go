@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/agent-feed/backend-go/internal/db"
-	"github.com/agent-feed/backend-go/internal/db/agents"
-	"github.com/agent-feed/backend-go/internal/db/posts"
+	"github.com/agent-feed/backend-go/internal/db/model"
 	"github.com/agent-feed/backend-go/internal/dispatch"
 	"github.com/agent-feed/backend-go/internal/events"
 	"github.com/agent-feed/backend-go/internal/logs"
@@ -21,9 +20,9 @@ import (
 // turn is one unit of work for the worker pool: a single agent deliberation.
 type turn struct {
 	mode       turnMode
-	agent      agents.Agent
-	agentMap   map[int64]agents.Agent
-	targetPost *posts.Post
+	agent      model.Agent
+	agentMap   map[int64]model.Agent
+	targetPost *model.Post
 }
 
 // turnMode selects what a turn does for an agent.
@@ -156,7 +155,7 @@ func (s *Scheduler) tick(ctx context.Context) {
 		return
 	}
 
-	agentMap := make(map[int64]agents.Agent, len(list))
+	agentMap := make(map[int64]model.Agent, len(list))
 	for _, a := range list {
 		agentMap[a.ID] = a
 	}
@@ -175,7 +174,7 @@ func (s *Scheduler) tick(ctx context.Context) {
 
 // submitTurn enqueues one agent turn onto the queue. It never drops work: if
 // the pool is saturated the turn simply waits for a free worker.
-func (s *Scheduler) submitTurn(ctx context.Context, mode turnMode, agent agents.Agent, agentMap map[int64]agents.Agent, targetPost *posts.Post) {
+func (s *Scheduler) submitTurn(ctx context.Context, mode turnMode, agent model.Agent, agentMap map[int64]model.Agent, targetPost *model.Post) {
 	if !agent.Active {
 		return
 	}
@@ -254,7 +253,7 @@ func (s *Scheduler) evaluateAgentTurn(ctx context.Context, t turn) {
 // authorMainPost runs the "post" phase: the agent authors a fresh main post,
 // gated by the 10-minute main-post cooldown so each agent posts at most once
 // per cycle. It never blocks on a full pool and never errors out the cycle.
-func (s *Scheduler) authorMainPost(ctx context.Context, agent agents.Agent, agentMap map[int64]agents.Agent) {
+func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agentMap map[int64]model.Agent) {
 	// Guardrail 1: at most 1 main post per 10 minutes.
 	last, err := s.db.PostDB.LastMainPost(ctx, agent.ID)
 	if err == nil && !last.IsZero() && time.Since(last) < s.postCooldown {
@@ -282,7 +281,7 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent agents.Agent, agen
 		log.Printf("scheduler: agent %d persist post: %v", agent.ID, cerr)
 		return
 	}
-	_ = s.db.PostDB.SetSeen(ctx, agent.ID, created.ID)
+	_ = s.db.LastSeenDB.SetSeen(ctx, agent.ID, created.ID)
 	// The author subscribes to their own thread so they hear the replies.
 	_ = s.db.SubscriptionsDB.Subscribe(ctx, agent.ID, created.ID)
 	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
@@ -297,14 +296,14 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent agents.Agent, agen
 
 // reviewUnread runs the periodic "review" phase. It reads all new posts published
 // since the agent's watermark and evaluates each post for a potential reply.
-func (s *Scheduler) reviewUnread(ctx context.Context, agent agents.Agent, agentMap map[int64]agents.Agent) {
+func (s *Scheduler) reviewUnread(ctx context.Context, agent model.Agent, agentMap map[int64]model.Agent) {
 	newPosts, err := s.db.PostDB.NewPostsAfter(ctx, agent.ID)
 	if err != nil {
 		log.Printf("scheduler: agent %d fetch new posts: %v", agent.ID, err)
 		return
 	}
 
-	seenMax := s.db.PostDB.LastSeen(ctx, agent.ID)
+	seenMax := s.db.LastSeenDB.LastSeen(ctx, agent.ID)
 
 	for _, p := range newPosts {
 		if p.AgentID == agent.ID {
@@ -316,8 +315,8 @@ func (s *Scheduler) reviewUnread(ctx context.Context, agent agents.Agent, agentM
 		}
 		// Advance the watermark incrementally so a long review that times out
 		// still records progress and never re-reviews already-decided posts.
-		if seenMax > s.db.PostDB.LastSeen(ctx, agent.ID) {
-			if err := s.db.PostDB.SetSeen(ctx, agent.ID, seenMax); err != nil {
+		if seenMax > s.db.LastSeenDB.LastSeen(ctx, agent.ID) {
+			if err := s.db.LastSeenDB.SetSeen(ctx, agent.ID, seenMax); err != nil {
 				log.Printf("scheduler: agent %d set seen: %v", agent.ID, err)
 			}
 		}
@@ -325,14 +324,14 @@ func (s *Scheduler) reviewUnread(ctx context.Context, agent agents.Agent, agentM
 }
 
 // reviewTargetPost runs a comment-triggered recheck for a specific post.
-func (s *Scheduler) reviewTargetPost(ctx context.Context, agent agents.Agent, targetPost posts.Post, agentMap map[int64]agents.Agent) {
+func (s *Scheduler) reviewTargetPost(ctx context.Context, agent model.Agent, targetPost model.Post, agentMap map[int64]model.Agent) {
 	if targetPost.AgentID == agent.ID {
 		return
 	}
 	s.maybeReply(ctx, agent, targetPost, agentMap)
-	seenMax := s.db.PostDB.LastSeen(ctx, agent.ID)
+	seenMax := s.db.LastSeenDB.LastSeen(ctx, agent.ID)
 	if targetPost.ID > seenMax {
-		if err := s.db.PostDB.SetSeen(ctx, agent.ID, targetPost.ID); err != nil {
+		if err := s.db.LastSeenDB.SetSeen(ctx, agent.ID, targetPost.ID); err != nil {
 			log.Printf("scheduler: agent %d set seen for target post: %v", agent.ID, err)
 		}
 	}
@@ -340,7 +339,7 @@ func (s *Scheduler) reviewTargetPost(ctx context.Context, agent agents.Agent, ta
 
 // maybeReply asks the AI how to react to a single post and, if it chooses to
 // reply, persists the comment and notifies the thread's subscribers.
-func (s *Scheduler) maybeReply(ctx context.Context, agent agents.Agent, post posts.Post, agentMap map[int64]agents.Agent) {
+func (s *Scheduler) maybeReply(ctx context.Context, agent model.Agent, post model.Post, agentMap map[int64]model.Agent) {
 	thread := s.threadContext(ctx, post)
 	decision, err := s.dispatcher.Think(ctx, agent, post, thread, s.memories(ctx, agent.ID), agentMap)
 	if err != nil {
@@ -382,12 +381,12 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent agents.Agent, post pos
 //   - a thread comment notifies everyone subscribed to the thread plus mentions;
 //
 // and never re-notifies the agent that just authored it.
-func (s *Scheduler) notifySubscribers(ctx context.Context, created posts.Post, agentMap map[int64]agents.Agent) {
+func (s *Scheduler) notifySubscribers(ctx context.Context, created model.Post, agentMap map[int64]model.Agent) {
 	var subscriberIDs, followerIDs []int64
 	if created.ParentID != nil {
 		// Thread comment: notify thread subscribers.
 		if created.RootID != nil {
-			if subs, err := s.db.SubscriptionsDB.Subscribers(ctx, *created.RootID); err == nil {
+			if subs, err := s.db.SubscriptionsDB.ListSubscribers(ctx, *created.RootID); err == nil {
 				subscriberIDs = subs
 			}
 		}
@@ -424,7 +423,7 @@ func (s *Scheduler) notifySubscribers(ctx context.Context, created posts.Post, a
 // selectNotifyTargets computes the deduped, author-excluded audience for a new
 // post. A reply notifies thread subscribers; a main post notifies the author's
 // followers. Mentioned agents are always included.
-func selectNotifyTargets(created posts.Post, subscriberIDs, followerIDs []int64) []int64 {
+func selectNotifyTargets(created model.Post, subscriberIDs, followerIDs []int64) []int64 {
 	var base []int64
 	if created.ParentID != nil {
 		base = subscriberIDs
@@ -457,7 +456,7 @@ func (s *Scheduler) memories(ctx context.Context, agentID int64) []string {
 	return out
 }
 
-func (s *Scheduler) threadContext(ctx context.Context, post posts.Post) []posts.Post {
+func (s *Scheduler) threadContext(ctx context.Context, post model.Post) []model.Post {
 	root := post.RootID
 	if root == nil && post.ParentID != nil {
 		root = post.ParentID

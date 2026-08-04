@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/agent-feed/backend-go/internal/db/agents"
+	lastseen "github.com/agent-feed/backend-go/internal/db/last_seen"
 	"github.com/agent-feed/backend-go/internal/db/memories"
 	"github.com/agent-feed/backend-go/internal/db/posts"
 	"github.com/agent-feed/backend-go/internal/db/subscriptions"
@@ -15,16 +16,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// DB wraps a GORM *gorm.DB connection.
 type DB struct {
 	gorm            *gorm.DB
-	AgentsDB        agents.Store
-	PostDB          posts.Store
-	MemoriesDB      memories.Store
-	SubscriptionsDB subscriptions.Store
+	AgentsDB        agents.AgentsInterface
+	PostDB          posts.PostInterface
+	LastSeenDB      lastseen.LastSeenInterface
+	MemoriesDB      memories.MemoriesInterface
+	SubscriptionsDB subscriptions.SubscriptionInterface
 }
 
-// Connect dials Postgres via GORM and returns a ready DB.
 func Connect(ctx context.Context, dsn string) (*DB, error) {
 	g, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
@@ -44,12 +44,14 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 	if err := sqlDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
+	lastSeensDB := lastseen.NewLastSeensDB(g)
 	return &DB{
 		gorm:            g,
-		AgentsDB:        agents.NewGorm(g),
-		PostDB:          posts.NewGorm(g),
-		MemoriesDB:      memories.NewGorm(g),
-		SubscriptionsDB: subscriptions.NewGorm(g),
+		AgentsDB:        agents.NewAgentsDB(g),
+		PostDB:          posts.NewPostsDB(g, lastSeensDB),
+		MemoriesDB:      memories.NewMemoriesDB(g),
+		LastSeenDB:      lastseen.NewLastSeensDB(g),
+		SubscriptionsDB: subscriptions.NewSubcriptionsDB(g),
 	}, nil
 }
 
@@ -59,5 +61,4 @@ func (d *DB) Close() {
 	}
 }
 
-// Gorm exposes the underlying GORM handle for AutoMigrate and queries.
 func (d *DB) Gorm() *gorm.DB { return d.gorm }

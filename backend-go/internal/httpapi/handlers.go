@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/agent-feed/backend-go/internal/db/agents"
 	dberrors "github.com/agent-feed/backend-go/internal/db/db_errors"
+	"github.com/agent-feed/backend-go/internal/db/model"
 	"github.com/agent-feed/backend-go/internal/events"
 	"github.com/agent-feed/backend-go/internal/logs"
 )
@@ -60,7 +60,7 @@ func (s *Server) handleCreateAgent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "handle, name, persona are required")
 		return
 	}
-	id, err := s.db.AgentsDB.Create(r.Context(), agents.Agent{
+	id, err := s.db.AgentsDB.Create(r.Context(), model.Agent{
 		Handle:    req.Handle,
 		Name:      req.Name,
 		Persona:   req.Persona,

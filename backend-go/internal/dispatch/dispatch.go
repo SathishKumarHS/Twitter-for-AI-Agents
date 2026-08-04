@@ -8,8 +8,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	agentfeedpb "github.com/agent-feed/backend-go/gen/agentfeedpb"
-	"github.com/agent-feed/backend-go/internal/db/agents"
-	"github.com/agent-feed/backend-go/internal/db/posts"
+	"github.com/agent-feed/backend-go/internal/db/model"
 	"github.com/agent-feed/backend-go/internal/logs"
 )
 
@@ -47,17 +46,17 @@ func (d *Dispatcher) Close() error {
 // to a feed post. recent provides thread context (older posts in the thread)
 // so replies feel aware of the conversation. memories are the agent's long-term
 // history, closing the loop so decisions are informed by prior experience.
-func (d *Dispatcher) Think(ctx context.Context, agent agents.Agent, post posts.Post, recent []posts.Post, memories []string, agentMap map[int64]agents.Agent) (*Decision, error) {
+func (d *Dispatcher) Think(ctx context.Context, agent model.Agent, post model.Post, recent []model.Post, memories []string, agentMap map[int64]model.Agent) (*Decision, error) {
 	return d.think(ctx, "respond", agent, post, recent, memories, agentMap)
 }
 
 // Proactive asks the worker to author fresh, original content from the agent.
 // It is the "empty feed" path: with no post to react to, the agent posts on its own.
-func (d *Dispatcher) Proactive(ctx context.Context, agent agents.Agent, recent []posts.Post, memories []string, agentMap map[int64]agents.Agent) (*Decision, error) {
-	return d.think(ctx, "proactive", agent, posts.Post{}, recent, memories, agentMap)
+func (d *Dispatcher) Proactive(ctx context.Context, agent model.Agent, recent []model.Post, memories []string, agentMap map[int64]model.Agent) (*Decision, error) {
+	return d.think(ctx, "proactive", agent, model.Post{}, recent, memories, agentMap)
 }
 
-func (d *Dispatcher) think(ctx context.Context, mode string, agent agents.Agent, post posts.Post, recent []posts.Post, memories []string, agentMap map[int64]agents.Agent) (*Decision, error) {
+func (d *Dispatcher) think(ctx context.Context, mode string, agent model.Agent, post model.Post, recent []model.Post, memories []string, agentMap map[int64]model.Agent) (*Decision, error) {
 	protoRecent := make([]*agentfeedpb.Post, 0, len(recent))
 	for i := range recent {
 		protoRecent = append(protoRecent, toProtoPost(recent[i], agentMap))
@@ -78,7 +77,7 @@ func (d *Dispatcher) think(ctx context.Context, mode string, agent agents.Agent,
 	return &Decision{Action: resp.Action, Text: resp.Text}, nil
 }
 
-func toProtoAgent(a agents.Agent) *agentfeedpb.Agent {
+func toProtoAgent(a model.Agent) *agentfeedpb.Agent {
 	return &agentfeedpb.Agent{
 		Id:           a.ID,
 		Handle:       a.Handle,
@@ -94,7 +93,7 @@ func toProtoAgent(a agents.Agent) *agentfeedpb.Agent {
 	}
 }
 
-func toProtoPost(p posts.Post, agentMap map[int64]agents.Agent) *agentfeedpb.Post {
+func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *agentfeedpb.Post {
 	parent := int64(0)
 	if p.ParentID != nil {
 		parent = *p.ParentID
