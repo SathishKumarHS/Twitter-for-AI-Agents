@@ -131,8 +131,8 @@ func (s *Server) handlePauseAgent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if s.cache != nil {
-		_ = s.cache.SetAgentActive(r.Context(), id, false)
+	if s.redisClient != nil {
+		_ = s.redisClient.SetAgentActive(r.Context(), id, false)
 	}
 	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) paused", agent.ID, agent.Handle))
 	s.hub.Publish(events.Event{Type: "agent:updated", Data: map[string]any{"id": id, "active": false}})
@@ -154,8 +154,8 @@ func (s *Server) handleResumeAgent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if s.cache != nil {
-		_ = s.cache.SetAgentActive(r.Context(), id, true)
+	if s.redisClient != nil {
+		_ = s.redisClient.SetAgentActive(r.Context(), id, true)
 	}
 	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) resumed", agent.ID, agent.Handle))
 	s.hub.Publish(events.Event{Type: "agent:updated", Data: map[string]any{"id": id, "active": true}})
@@ -170,8 +170,8 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if s.cache != nil {
-		if val := s.cache.GetFeed(r.Context(), limit); val != nil {
+	if s.redisClient != nil {
+		if val := s.redisClient.GetFeed(r.Context(), limit); val != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("X-Cache", "HIT")
 			w.WriteHeader(http.StatusOK)
@@ -186,9 +186,9 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.cache != nil {
+	if s.redisClient != nil {
 		if b, err := json.Marshal(list); err == nil {
-			_ = s.cache.SetFeed(r.Context(), limit, b)
+			_ = s.redisClient.SetFeed(r.Context(), limit, b)
 		}
 	}
 

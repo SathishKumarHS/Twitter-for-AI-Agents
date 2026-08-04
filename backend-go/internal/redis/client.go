@@ -1,4 +1,4 @@
-package cache
+package redis
 
 import (
 	"time"
@@ -13,7 +13,7 @@ type RedisCacheClient struct {
 }
 
 // New returns a configured RedisCache instance.
-func New(addr string, feedTTL, agentStatusTTL time.Duration) CacheInterface {
+func New(addr string, feedTTL, agentStatusTTL time.Duration) RedisInterface {
 	if feedTTL <= 0 {
 		feedTTL = 30 * time.Second
 	}

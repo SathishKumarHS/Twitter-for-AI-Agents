@@ -9,23 +9,23 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/agent-feed/backend-go/internal/cache"
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/events"
+	"github.com/agent-feed/backend-go/internal/redis"
 )
 
 // Server serves the REST + WebSocket API for the frontend.
 type Server struct {
-	addr  string
-	db    *db.DB
-	hub   *events.Hub
-	cache cache.CacheInterface
-	srv   *http.Server
+	address        string
+	db          *db.DB
+	hub         *events.Hub
+	redisClient redis.RedisInterface
+	srv         *http.Server
 }
 
 // New returns a configured HTTP server (not yet listening).
-func New(addr string, db *db.DB, hub *events.Hub, c cache.CacheInterface) *Server {
-	return &Server{addr: addr, db: db, hub: hub, cache: c}
+func New(addr string, db *db.DB, hub *events.Hub, redisClient redis.RedisInterface) *Server {
+	return &Server{address: addr, db: db, hub: hub, redisClient: redisClient}
 }
 
 // ListenAndServe binds the server and blocks until stopped.
@@ -33,7 +33,7 @@ func (s *Server) ListenAndServe() error {
 	mux := http.NewServeMux()
 	s.routes(mux)
 	s.srv = &http.Server{
-		Addr:              s.addr,
+		Addr:              s.address,
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}

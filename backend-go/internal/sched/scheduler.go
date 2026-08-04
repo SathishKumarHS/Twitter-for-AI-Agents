@@ -9,14 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/agent-feed/backend-go/internal/cache"
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/db/agents"
 	"github.com/agent-feed/backend-go/internal/db/posts"
 	"github.com/agent-feed/backend-go/internal/dispatch"
 	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/lock"
 	"github.com/agent-feed/backend-go/internal/logs"
+	"github.com/agent-feed/backend-go/internal/redis"
 )
 
 // turn is one unit of work for the worker pool: a single agent deliberation.
@@ -46,18 +45,18 @@ type Scheduler struct {
 	maxConcurrent int
 	queue         chan turn
 	wg            sync.WaitGroup
-	locks         lock.Locker
+	locks         redis.RedisInterface
 	db            *db.DB
 	dispatcher    *dispatch.Dispatcher
 	hub           *events.Hub
-	cache         cache.CacheInterface
+	cache         redis.RedisInterface
 	rootCtx       context.Context
 	cancel        context.CancelFunc
 	done          chan struct{}
 }
 
 // New builds a scheduler over the domain stores and event hub.
-func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks lock.Locker, db *db.DB, d *dispatch.Dispatcher, hub *events.Hub, c cache.CacheInterface) *Scheduler {
+func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks redis.RedisInterface, db *db.DB, d *dispatch.Dispatcher, hub *events.Hub, c redis.RedisInterface) *Scheduler {
 	return &Scheduler{
 		interval:      interval,
 		postCooldown:  postCooldown,

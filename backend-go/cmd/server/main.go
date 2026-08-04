@@ -8,15 +8,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/agent-feed/backend-go/internal/cache"
 	"github.com/agent-feed/backend-go/internal/config"
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/db/schema"
 	"github.com/agent-feed/backend-go/internal/dispatch"
 	"github.com/agent-feed/backend-go/internal/events"
 	"github.com/agent-feed/backend-go/internal/httpapi"
-	"github.com/agent-feed/backend-go/internal/lock"
 	"github.com/agent-feed/backend-go/internal/logs"
+	"github.com/agent-feed/backend-go/internal/redis"
 	"github.com/agent-feed/backend-go/internal/sched"
 )
 
@@ -45,17 +44,14 @@ func main() {
 	}
 	defer dispatcher.Close()
 
-	cacheClient := cache.New(cfg.Redis.Addr, cfg.Redis.FeedTTL, cfg.Redis.AgentStatusTTL)
-	defer cacheClient.Close()
+	redisClient := redis.New(cfg.Redis.Addr, cfg.Redis.FeedTTL, cfg.Redis.AgentStatusTTL)
+	defer redisClient.Close()
 
-	locker := lock.NewHybrid(cfg.Redis.Addr)
-	defer locker.Close()
-
-	sched := sched.New(cfg.Server.PollInterval, cfg.Server.PostInterval, cfg.Server.TurnTimeout, cfg.Server.MaxConcurrent, locker, db, dispatcher, hub, cacheClient)
+	sched := sched.New(cfg.Server.PollInterval, cfg.Server.PostInterval, cfg.Server.TurnTimeout, cfg.Server.MaxConcurrent, redisClient, db, dispatcher, hub, redisClient)
 	sched.Start(ctx)
 	defer sched.Stop()
 
-	srv := httpapi.New(cfg.Server.Address, db, hub, cacheClient)
+	srv := httpapi.New(cfg.Server.Address, db, hub, redisClient)
 	go func() {
 		msg := fmt.Sprintf("HTTP Server started listening on %s", cfg.Server.Address)
 		log.Println(msg)
