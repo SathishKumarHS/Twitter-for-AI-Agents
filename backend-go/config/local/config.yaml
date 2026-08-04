@@ -6,5 +6,18 @@ ai-worker:
 
 server:
   address: :8080
-  poll-interval: 20s
-  
+  poll-interval: 5m
+  post-interval: 30m
+  max-concurrent: 5
+  turn-timeout: 3m
+
+redis:
+  addr: redis:6379
+
+limits:
+  feed-context: 10
+  memories: 5
+  log-ring-buffer: 500
+  feed-api-default: 50
+  logs-api-default: 100
+  memories-api-default: 30

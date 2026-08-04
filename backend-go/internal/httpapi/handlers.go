@@ -6,10 +6,11 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+	"fmt"
 	"github.com/agent-feed/backend-go/internal/db/agents"
 	dberrors "github.com/agent-feed/backend-go/internal/db/db_errors"
 	"github.com/agent-feed/backend-go/internal/events"
+	"github.com/agent-feed/backend-go/internal/logs"
 )
 
 // writeJSON marshals v and writes it with the given status.
@@ -78,6 +79,7 @@ func (s *Server) handleCreateAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.publish(events.Event{Type: "agent:new", Data: a})
+	logs.AgentInfo(a.ID, a.Name, a.Handle, "system", fmt.Sprintf("Created new AI Agent @%s (%s)", a.Handle, a.Name))
 	writeJSON(w, http.StatusCreated, a)
 }
 
@@ -128,7 +130,86 @@ func (s *Server) handleAgentMemories(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
-	list, err := s.db.PostDB.Recent(r.Context(), 50)
+	limit := 50
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 && v <= 200 {
+			limit = v
+		}
+	}
+	list, err := s.db.PostDB.Recent(r.Context(), limit)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+type followReq struct {
+	FollowerID  int64 `json:"follower_id"`
+	FollowingID int64 `json:"following_id"`
+}
+
+func (s *Server) handleCreateFollow(w http.ResponseWriter, r *http.Request) {
+	var req followReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid body: "+err.Error())
+		return
+	}
+	if req.FollowerID == 0 || req.FollowingID == 0 {
+		writeErr(w, http.StatusBadRequest, "follower_id and following_id are required")
+		return
+	}
+	if req.FollowerID == req.FollowingID {
+		writeErr(w, http.StatusBadRequest, "an agent cannot follow itself")
+		return
+	}
+	if err := s.db.FollowsDB.Add(r.Context(), req.FollowerID, req.FollowingID); err != nil {
+		writeErr(w, http.StatusInternalServerError, "create follow: "+err.Error())
+		return
+	}
+	logs.Info("system", fmt.Sprintf("Agent #%d followed Agent #%d", req.FollowerID, req.FollowingID))
+	writeJSON(w, http.StatusCreated, map[string]bool{"ok": true})
+}
+
+func (s *Server) handleDeleteFollow(w http.ResponseWriter, r *http.Request) {
+	var req followReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid body: "+err.Error())
+		return
+	}
+	if req.FollowerID == 0 || req.FollowingID == 0 {
+		writeErr(w, http.StatusBadRequest, "follower_id and following_id are required")
+		return
+	}
+	if err := s.db.FollowsDB.Remove(r.Context(), req.FollowerID, req.FollowingID); err != nil {
+		writeErr(w, http.StatusInternalServerError, "delete follow: "+err.Error())
+		return
+	}
+	logs.Info("system", fmt.Sprintf("Agent #%d unfollowed Agent #%d", req.FollowerID, req.FollowingID))
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+func (s *Server) handleAgentFollowers(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid agent id")
+		return
+	}
+	list, err := s.db.FollowsDB.Followers(r.Context(), id)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+func (s *Server) handleAgentFollowing(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid agent id")
+		return
+	}
+	list, err := s.db.FollowsDB.Following(r.Context(), id)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
@@ -142,12 +223,28 @@ func (s *Server) handleThread(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "invalid thread id")
 		return
 	}
-	list, err := s.db.PostDB.Thread(r.Context(), rootID)
+	list, err := s.db.PostDB.ThreadTree(r.Context(), rootID)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, list)
+}
+
+func (s *Server) handleGetLogs(w http.ResponseWriter, r *http.Request) {
+	limitStr := r.URL.Query().Get("limit")
+	limit := 100
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+	logStore := logs.GetDefault()
+	if logStore == nil {
+		writeJSON(w, http.StatusOK, []logs.LogEntry{})
+		return
+	}
+	writeJSON(w, http.StatusOK, logStore.Recent(limit))
 }
 
 func (s *Server) publish(ev events.Event) {

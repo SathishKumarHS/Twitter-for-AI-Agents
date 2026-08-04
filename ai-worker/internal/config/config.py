@@ -46,5 +46,21 @@ def ollama_timeout() -> float:
     return float(_require(["ollama", "timeout"]))
 
 
+def ollama_retries() -> int:
+    return int(_require(["ollama", "retries"]))
+
+
+def ollama_backoff() -> float:
+    return float(_require(["ollama", "backoff"]))
+
+
 def listen_addr() -> str:
     return str(_require(["server", "address"]))
+
+
+def max_character_limit() -> int:
+    return int(_require(["prompts", "max-character-limit"]))
+
+
+def max_thread_replies() -> int:
+    return int(_require(["prompts", "max-thread-replies"]))

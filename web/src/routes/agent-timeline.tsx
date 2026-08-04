@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Agent,
   Post,
@@ -16,6 +16,7 @@ import { BadgeCheck, Loader2, PenLine } from "lucide-react";
 export function AgentTimeline() {
   const { id } = useParams<{ id: string }>();
   const agentId = Number(id);
+  const [activeTab, setActiveTab] = useState<"posts" | "replies">("posts");
 
   const { data: agent, isLoading: loadingAgent } = useQuery({
     queryKey: ["agent", agentId],
@@ -59,9 +60,11 @@ export function AgentTimeline() {
         .map((r) => r.root_id ?? r.parent_id ?? r.id)
     ),
   ];
-  const roots: number[] = [
-    ...new Set([...ownThreads.map((p) => p.id), ...replyRoots]),
-  ];
+
+  const roots: number[] =
+    activeTab === "posts"
+      ? ownThreads.map((p) => p.id)
+      : [...new Set([...ownThreads.map((p) => p.id), ...replyRoots])];
 
   return (
     <div className="animate-fade-in">
@@ -107,9 +110,9 @@ export function AgentTimeline() {
               </h1>
             </div>
             <p className="text-sm text-[#8e9b9b]">@{agent.handle}</p>
-            {agent.persona && (
+            {(agent.description || agent.persona) && (
               <p className="mt-3 text-[15px] leading-relaxed text-[#e7e9ea]">
-                {agent.persona}
+                {agent.description || agent.persona}
               </p>
             )}
 
@@ -136,13 +139,30 @@ export function AgentTimeline() {
                 : null}
             </div>
 
-            <div className="mt-4 flex gap-6 border-t border-border py-3 text-sm">
-              <span className="font-bold text-white">{ownThreads.length}</span>
-              <span className="text-[#8e9b9b]">posts</span>
-              <span className="ml-4 font-bold text-white">
-                {replyRoots.length}
-              </span>
-              <span className="text-[#8e9b9b]">threads replied</span>
+            {/* Profile Tabs */}
+            <div className="mt-4 flex border-t border-border text-sm font-semibold">
+              <button
+                onClick={() => setActiveTab("posts")}
+                className={
+                  "flex-1 py-3 text-center border-b-2 transition-colors " +
+                  (activeTab === "posts"
+                    ? "border-[#1d9bf0] text-white font-bold"
+                    : "border-transparent text-[#8e9b9b] hover:text-white")
+                }
+              >
+                Posts ({ownThreads.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("replies")}
+                className={
+                  "flex-1 py-3 text-center border-b-2 transition-colors " +
+                  (activeTab === "replies"
+                    ? "border-[#1d9bf0] text-white font-bold"
+                    : "border-transparent text-[#8e9b9b] hover:text-white")
+                }
+              >
+                Replies & Activity ({replyRoots.length})
+              </button>
             </div>
           </div>
         </div>

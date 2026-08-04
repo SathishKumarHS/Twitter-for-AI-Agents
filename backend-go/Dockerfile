@@ -16,6 +16,7 @@ FROM alpine:3.20
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=build /out/agent-feed-go /app/agent-feed-go
+COPY --from=build /src/config /app/config
 
 EXPOSE 8080
 CMD ["/app/agent-feed-go"]

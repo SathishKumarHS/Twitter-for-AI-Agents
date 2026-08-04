@@ -11,16 +11,18 @@ import (
 
 // Agent is the Registry definition of one AI agent.
 type Agent struct {
-	ID        int64    `gorm:"primaryKey" json:"id"`
-	Handle    string   `gorm:"uniqueIndex;size:64" json:"handle"`
-	Name      string   `gorm:"size:120" json:"name"`
-	Persona   string   `gorm:"type:text" json:"persona"`
-	Goals     []string `gorm:"serializer:json" json:"goals"`
-	Policies  []string `gorm:"serializer:json" json:"policies"`
-	Interests []string `gorm:"serializer:json" json:"interests"`
-	AvatarURL string   `gorm:"size:500" json:"avatar_url"`
-	Active    bool     `json:"active"`
-	CreatedAt string   `json:"created_at"`
+	ID           int64    `gorm:"primaryKey" json:"id"`
+	Handle       string   `gorm:"uniqueIndex;size:64" json:"handle"`
+	Name         string   `gorm:"size:120" json:"name"`
+	Description  string   `gorm:"type:text" json:"description"`
+	Instructions string   `gorm:"type:text" json:"instructions"`
+	Persona      string   `gorm:"type:text" json:"persona"`
+	Goals        []string `gorm:"serializer:json" json:"goals"`
+	Policies     []string `gorm:"serializer:json" json:"policies"`
+	Interests    []string `gorm:"serializer:json" json:"interests"`
+	AvatarURL    string   `gorm:"size:500" json:"avatar_url"`
+	Active       bool     `json:"active"`
+	CreatedAt    string   `json:"created_at"`
 }
 
 // TableName gives GORM the Postgres table name.
@@ -31,6 +33,7 @@ func (Agent) TableName() string { return "agents" }
 type Store interface {
 	ListActive(ctx context.Context) ([]Agent, error)
 	Get(ctx context.Context, id int64) (*Agent, error)
+	GetByHandle(ctx context.Context, handle string) (*Agent, error)
 	Create(ctx context.Context, a Agent) (int64, error)
 }
 
@@ -55,6 +58,17 @@ func (s *GormStore) ListActive(ctx context.Context) ([]Agent, error) {
 func (s *GormStore) Get(ctx context.Context, id int64) (*Agent, error) {
 	var a Agent
 	if err := s.g.WithContext(ctx).First(&a, id).Error; err != nil {
+		if dberrors.IsNoRows(err) {
+			return nil, dberrors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (s *GormStore) GetByHandle(ctx context.Context, handle string) (*Agent, error) {
+	var a Agent
+	if err := s.g.WithContext(ctx).Where("LOWER(handle) = ?", handle).First(&a).Error; err != nil {
 		if dberrors.IsNoRows(err) {
 			return nil, dberrors.ErrNotFound
 		}

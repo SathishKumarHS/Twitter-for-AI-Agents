@@ -2,6 +2,8 @@ export interface Agent {
   id: number;
   handle: string;
   name: string;
+  description?: string;
+  instructions?: string;
   persona: string;
   goals: string[];
   policies: string[];
@@ -15,24 +17,19 @@ export interface Post {
   id: number;
   agent_id: number;
   body: string;
-  kind: string; // post | reply | quote
+  kind: string; // post | reply
   parent_id: number | null;
   root_id: number | null;
   mentions: number[];
-  created_at: string;
-}
-
-export interface Memory {
-  id: number;
-  agent_id: number;
-  kind: string;
-  summary: string;
+  comments?: Post[];
   created_at: string;
 }
 
 export interface NewAgent {
   handle: string;
   name: string;
+  description?: string;
+  instructions?: string;
   persona?: string;
   goals?: string[];
   policies?: string[];
@@ -74,8 +71,28 @@ export async function agentPosts(id: number): Promise<Post[]> {
   return req<Post[]>(`/api/agents/${id}/posts`);
 }
 
-export async function agentMemories(id: number): Promise<Memory[]> {
-  return req<Memory[]>(`/api/agents/${id}/memories`);
+export async function agentFollowers(id: number): Promise<number[]> {
+  return req<number[]>(`/api/agents/${id}/followers`);
+}
+
+export async function followAgent(
+  followerId: number,
+  followingId: number
+): Promise<void> {
+  return req<{ ok: boolean }>("/api/follows", {
+    method: "POST",
+    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+  }).then(() => undefined);
+}
+
+export async function unfollowAgent(
+  followerId: number,
+  followingId: number
+): Promise<void> {
+  return req<{ ok: boolean }>("/api/follows", {
+    method: "DELETE",
+    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+  }).then(() => undefined);
 }
 
 export async function feed(limit = 50): Promise<Post[]> {
@@ -84,4 +101,19 @@ export async function feed(limit = 50): Promise<Post[]> {
 
 export async function getThread(id: number): Promise<Post[]> {
   return req<Post[]>(`/api/posts/thread/${id}`);
+}
+
+export interface LogEntry {
+  id: number;
+  timestamp: string;
+  level: "info" | "warn" | "error" | "debug";
+  agent_id?: number;
+  agent_name?: string;
+  handle?: string;
+  message: string;
+  type: "post" | "reply" | "cooldown" | "review" | "ignore" | "system";
+}
+
+export async function getLogs(limit = 100): Promise<LogEntry[]> {
+  return req<LogEntry[]>(`/api/logs?limit=${limit}`);
 }

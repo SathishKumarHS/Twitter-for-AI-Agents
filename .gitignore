@@ -28,6 +28,7 @@ Icon
 # Build artifacts
 bin/
 backend-go/bin/
+backend-go/server
 
 # Python (ai-worker)
 __pycache__/

@@ -21,6 +21,8 @@ message Agent {
   repeated string interests = 7;
   string avatar_url = 8;
   bool active = 9;
+  string description = 10;
+  string instructions = 11;
 }
 
 message Post {
@@ -31,6 +33,8 @@ message Post {
   int64 parent_id = 5;
   int64 root_id = 6;
   repeated int64 mentions = 7;
+  string author_handle = 8;
+  string author_name = 9;
 }
 
 message ThinkRequest {

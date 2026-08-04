@@ -22,7 +22,7 @@ func (Memory) TableName() string { return "memories" }
 
 // Store is the storage contract for agent memories.
 type Store interface {
-	Add(ctx context.Context, agentID int64, kind, summary string, importance int) error
+	Add(ctx context.Context, agentID int64, kind, summary string) error
 	List(ctx context.Context, agentID int64, limit int) ([]Memory, error)
 }
 
@@ -36,7 +36,7 @@ func NewGorm(g *gorm.DB) Store {
 	return &GormStore{g: g}
 }
 
-func (s *GormStore) Add(ctx context.Context, agentID int64, kind, summary string, importance int) error {
+func (s *GormStore) Add(ctx context.Context, agentID int64, kind, summary string) error {
 	if kind == "" {
 		kind = "observation"
 	}

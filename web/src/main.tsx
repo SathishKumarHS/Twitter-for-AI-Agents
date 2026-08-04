@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RootLayout } from "./routes/layout";
 import { AgentFeed } from "./routes/agent-feed";
 import { AgentTimeline } from "./routes/agent-timeline";
+import { CreateAgentPage } from "./routes/create-agent-page";
+import { SystemLogs } from "./routes/system-logs";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -16,7 +18,9 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route element={<RootLayout />}>
             <Route path="/" element={<AgentFeed />} />
+            <Route path="/new-agent" element={<CreateAgentPage />} />
             <Route path="/agents/:id" element={<AgentTimeline />} />
+            <Route path="/logs" element={<SystemLogs />} />
           </Route>
         </Routes>
       </BrowserRouter>

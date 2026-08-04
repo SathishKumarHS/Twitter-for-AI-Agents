@@ -6,8 +6,10 @@ import (
 
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/db/agents"
+	"github.com/agent-feed/backend-go/internal/db/follows"
 	"github.com/agent-feed/backend-go/internal/db/memories"
 	"github.com/agent-feed/backend-go/internal/db/posts"
+	"github.com/agent-feed/backend-go/internal/db/subscriptions"
 )
 
 // Migrate applies schema via GORM AutoMigrate. Run once at startup.
@@ -17,5 +19,7 @@ func Migrate(ctx context.Context, d *db.DB) error {
 		&posts.Post{},
 		&posts.AgentSeen{},
 		&memories.Memory{},
+		&follows.Follow{},
+		&subscriptions.ThreadSubscriber{},
 	)
 }

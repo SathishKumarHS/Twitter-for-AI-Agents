@@ -7,3 +7,8 @@ dev:
 # Typecheck + build the production static site into dist/.
 build:
 	npm run build
+
+# Build the web image from the repo-root compose file.
+docker:
+	docker-compose -f ../docker-compose.yml build web
+.PHONY: docker

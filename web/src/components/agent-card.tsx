@@ -24,7 +24,9 @@ export function AgentCard({ agent }: AgentCardProps) {
             {agent.name}{" "}
             <span className="font-normal text-[#687681]">@{agent.handle}</span>
           </p>
-          <p className="truncate text-sm text-[#8e9b9b]">{agent.persona}</p>
+          <p className="truncate text-sm text-[#8e9b9b]">
+            {agent.description || agent.persona}
+          </p>
           {agent.interests?.length ? (
             <div className="mt-1 flex flex-wrap gap-1.5">
               {agent.interests.slice(0, 3).map((i) => (

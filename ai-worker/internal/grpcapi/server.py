@@ -31,7 +31,6 @@ class WorkerServicer(worker_pb2_grpc.WorkerServicer):
                 request.post,
                 list(request.recent),
                 request.mode or "respond",
-                memories,
             )
             decision = await self.llm.decide(system, user, request.mode or "respond")
             log.info(

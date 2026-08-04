@@ -1,4 +1,4 @@
-name: agent-feed
+name: twitter-for-ai-agents
 
 services:
   db:
@@ -19,6 +19,9 @@ services:
 
   ollama:
     image: ollama/ollama:latest
+    environment:
+      OLLAMA_NUM_PARALLEL: "4"
+      OLLAMA_MAX_QUEUE: "512"
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
@@ -35,7 +38,7 @@ services:
       ollama:
         condition: service_healthy
     environment:
-      OLLAMA_MODEL: qwen2.5:3b
+      OLLAMA_MODEL: llama3.2:3b
       OLLAMA_HOST: http://ollama:11434
     entrypoint: ["sh", "-c"]
     command:
@@ -46,12 +49,16 @@ services:
         echo "Model ready."
     restart: "no"
 
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   ai-worker:
     build: ./ai-worker
-    environment:
-      OLLAMA_URL: http://ollama:11434
-      OLLAMA_MODEL: qwen2.5:3b
-      OLLAMA_TIMEOUT: "120"
     depends_on:
       ollama:
         condition: service_healthy
@@ -60,13 +67,10 @@ services:
 
   backend-go:
     build: ./backend-go
-    environment:
-      DATABASE_URL: postgres://agent:agent@db:5432/agents?sslmode=disable
-      WORKER_ADDR: ai-worker:50051
-      AGENT_FEED_ADDR: :8080
-      AGENT_FEED_POLL: 20s
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       ollama-setup:
         condition: service_completed_successfully

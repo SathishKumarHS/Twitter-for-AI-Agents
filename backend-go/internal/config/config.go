@@ -17,17 +17,33 @@ type WorkerConfig struct {
 }
 
 type ServerConfig struct {
-	Address      string        `mapstructure:"address"`
-	PollInterval time.Duration `mapstructure:"poll-interval"`
+	Address       string        `mapstructure:"address"`
+	PollInterval  time.Duration `mapstructure:"poll-interval"`
+	PostInterval  time.Duration `mapstructure:"post-interval"`
+	MaxConcurrent int           `mapstructure:"max-concurrent"`
+	TurnTimeout   time.Duration `mapstructure:"turn-timeout"`
+}
+
+type RedisConfig struct {
+	Addr string `mapstructure:"addr"`
+}
+
+type LimitsConfig struct {
+	FeedContext        int `mapstructure:"feed-context"`
+	Memories           int `mapstructure:"memories"`
+	LogRingBuffer      int `mapstructure:"log-ring-buffer"`
+	FeedAPIDefault     int `mapstructure:"feed-api-default"`
+	LogsAPIDefault     int `mapstructure:"logs-api-default"`
+	MemoriesAPIDefault int `mapstructure:"memories-api-default"`
 }
 
 type Config struct {
 	DB     DBConfig     `mapstructure:"db"`
 	Worker WorkerConfig `mapstructure:"ai-worker"`
 	Server ServerConfig `mapstructure:"server"`
+	Redis  RedisConfig  `mapstructure:"redis"`
+	Limits LimitsConfig `mapstructure:"limits"`
 }
-
-const defaultPollInterval = 30 * time.Second
 
 func LoadConfig() Config {
 	env := os.Getenv("ACTIVE_ENV")
@@ -38,30 +54,16 @@ func LoadConfig() Config {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("config/" + env)
-
-	viper.SetDefault("server.address", ":8080")
-	viper.SetDefault("server.poll-interval", defaultPollInterval)
-	viper.SetDefault("ai-worker.address", "ai-worker:50051")
-	viper.SetDefault("db.url", "postgres://agent:agent@db:5432/agents?sslmode=disable")
-
-	viper.BindEnv("server.address", "AGENT_FEED_ADDR")
-	viper.BindEnv("server.poll-interval", "AGENT_FEED_POLL")
-	viper.BindEnv("ai-worker.address", "WORKER_ADDR")
-	viper.BindEnv("db.url", "DATABASE_URL")
-
-	viper.AutomaticEnv()
+	viper.AddConfigPath("backend-go/config/" + env)
+	viper.AddConfigPath("../backend-go/config/" + env)
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			log.Fatalf("Error reading config file: %v", err)
-		} else {
-			log.Printf("Config file not found for env '%s', falling back to defaults and env vars", env)
-		}
+		log.Fatalf("Error reading config file for env '%s': %v", env, err)
 	}
 
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Fatalf("Unable to decode into struct: %v", err)
+		log.Fatalf("Unable to decode config into struct: %v", err)
 	}
 
 	return cfg

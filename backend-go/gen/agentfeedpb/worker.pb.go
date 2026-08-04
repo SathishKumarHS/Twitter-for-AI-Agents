@@ -32,6 +32,8 @@ type Agent struct {
 	Interests     []string               `protobuf:"bytes,7,rep,name=interests,proto3" json:"interests,omitempty"`
 	AvatarUrl     string                 `protobuf:"bytes,8,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
 	Active        bool                   `protobuf:"varint,9,opt,name=active,proto3" json:"active,omitempty"`
+	Description   string                 `protobuf:"bytes,10,opt,name=description,proto3" json:"description,omitempty"`
+	Instructions  string                 `protobuf:"bytes,11,opt,name=instructions,proto3" json:"instructions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -129,6 +131,20 @@ func (x *Agent) GetActive() bool {
 	return false
 }
 
+func (x *Agent) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Agent) GetInstructions() string {
+	if x != nil {
+		return x.Instructions
+	}
+	return ""
+}
+
 type Post struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -138,6 +154,8 @@ type Post struct {
 	ParentId      int64                  `protobuf:"varint,5,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
 	RootId        int64                  `protobuf:"varint,6,opt,name=root_id,json=rootId,proto3" json:"root_id,omitempty"`
 	Mentions      []int64                `protobuf:"varint,7,rep,packed,name=mentions,proto3" json:"mentions,omitempty"`
+	AuthorHandle  string                 `protobuf:"bytes,8,opt,name=author_handle,json=authorHandle,proto3" json:"author_handle,omitempty"`
+	AuthorName    string                 `protobuf:"bytes,9,opt,name=author_name,json=authorName,proto3" json:"author_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -219,6 +237,20 @@ func (x *Post) GetMentions() []int64 {
 		return x.Mentions
 	}
 	return nil
+}
+
+func (x *Post) GetAuthorHandle() string {
+	if x != nil {
+		return x.AuthorHandle
+	}
+	return ""
+}
+
+func (x *Post) GetAuthorName() string {
+	if x != nil {
+		return x.AuthorName
+	}
+	return ""
 }
 
 type ThinkRequest struct {
@@ -357,7 +389,7 @@ var File_agentfeed_v1_worker_proto protoreflect.FileDescriptor
 
 const file_agentfeed_v1_worker_proto_rawDesc = "" +
 	"\n" +
-	"\x19agentfeed/v1/worker.proto\x12\tagentfeed\"\xe4\x01\n" +
+	"\x19agentfeed/v1/worker.proto\x12\tagentfeed\"\xaa\x02\n" +
 	"\x05Agent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x16\n" +
 	"\x06handle\x18\x02 \x01(\tR\x06handle\x12\x12\n" +
@@ -368,7 +400,10 @@ const file_agentfeed_v1_worker_proto_rawDesc = "" +
 	"\tinterests\x18\a \x03(\tR\tinterests\x12\x1d\n" +
 	"\n" +
 	"avatar_url\x18\b \x01(\tR\tavatarUrl\x12\x16\n" +
-	"\x06active\x18\t \x01(\bR\x06active\"\xab\x01\n" +
+	"\x06active\x18\t \x01(\bR\x06active\x12 \n" +
+	"\vdescription\x18\n" +
+	" \x01(\tR\vdescription\x12\"\n" +
+	"\finstructions\x18\v \x01(\tR\finstructions\"\xf1\x01\n" +
 	"\x04Post\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
 	"\bagent_id\x18\x02 \x01(\x03R\aagentId\x12\x12\n" +
@@ -376,7 +411,10 @@ const file_agentfeed_v1_worker_proto_rawDesc = "" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\x12\x1b\n" +
 	"\tparent_id\x18\x05 \x01(\x03R\bparentId\x12\x17\n" +
 	"\aroot_id\x18\x06 \x01(\x03R\x06rootId\x12\x1a\n" +
-	"\bmentions\x18\a \x03(\x03R\bmentions\"\xb4\x01\n" +
+	"\bmentions\x18\a \x03(\x03R\bmentions\x12#\n" +
+	"\rauthor_handle\x18\b \x01(\tR\fauthorHandle\x12\x1f\n" +
+	"\vauthor_name\x18\t \x01(\tR\n" +
+	"authorName\"\xb4\x01\n" +
 	"\fThinkRequest\x12&\n" +
 	"\x05agent\x18\x01 \x01(\v2\x10.agentfeed.AgentR\x05agent\x12#\n" +
 	"\x04post\x18\x02 \x01(\v2\x0f.agentfeed.PostR\x04post\x12'\n" +

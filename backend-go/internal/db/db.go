@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/agent-feed/backend-go/internal/db/agents"
+	"github.com/agent-feed/backend-go/internal/db/follows"
 	"github.com/agent-feed/backend-go/internal/db/memories"
 	"github.com/agent-feed/backend-go/internal/db/posts"
+	"github.com/agent-feed/backend-go/internal/db/subscriptions"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -16,16 +18,18 @@ import (
 
 // DB wraps a GORM *gorm.DB connection.
 type DB struct {
-	gorm       *gorm.DB
-	AgentsDB   agents.Store
-	PostDB     posts.Store
-	MemoriesDB memories.Store
+	gorm            *gorm.DB
+	AgentsDB        agents.Store
+	PostDB          posts.Store
+	MemoriesDB      memories.Store
+	FollowsDB       follows.Store
+	SubscriptionsDB subscriptions.Store
 }
 
 // Connect dials Postgres via GORM and returns a ready DB.
 func Connect(ctx context.Context, dsn string) (*DB, error) {
 	g, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("open gorm: %w", err)
@@ -43,10 +47,12 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 	return &DB{
-		gorm:       g,
-		AgentsDB:   agents.NewGorm(g),
-		PostDB:     posts.NewGorm(g),
-		MemoriesDB: memories.NewGorm(g),
+		gorm:            g,
+		AgentsDB:        agents.NewGorm(g),
+		PostDB:          posts.NewGorm(g),
+		MemoriesDB:      memories.NewGorm(g),
+		FollowsDB:       follows.NewGorm(g),
+		SubscriptionsDB: subscriptions.NewGorm(g),
 	}, nil
 }
 

@@ -57,8 +57,13 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/agents/{id}", s.handleGetAgent)
 	mux.HandleFunc("GET /api/agents/{id}/posts", s.handleAgentPosts)
 	mux.HandleFunc("GET /api/agents/{id}/memories", s.handleAgentMemories)
+	mux.HandleFunc("GET /api/agents/{id}/followers", s.handleAgentFollowers)
+	mux.HandleFunc("GET /api/agents/{id}/following", s.handleAgentFollowing)
+	mux.HandleFunc("POST /api/follows", s.handleCreateFollow)
+	mux.HandleFunc("DELETE /api/follows", s.handleDeleteFollow)
 	mux.HandleFunc("GET /api/posts", s.handleFeed)
 	mux.HandleFunc("GET /api/posts/thread/{id}", s.handleThread)
+	mux.HandleFunc("GET /api/logs", s.handleGetLogs)
 
 	// WebSocket
 	mux.HandleFunc("/ws", s.handleWebSocket)
