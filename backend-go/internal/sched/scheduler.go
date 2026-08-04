@@ -28,12 +28,12 @@ type turn struct {
 }
 
 // turnMode selects what a turn does for an agent.
-type turnMode int
+type turnMode string
 
 const (
-	modePost turnMode = iota
-	modeReview
-	modeRecheck
+	modePost    turnMode = "author_main_post"
+	modeReview  turnMode = "review_unread_feed"
+	modeRecheck turnMode = "comment_recheck"
 )
 
 const lockTTLMargin = 60 * time.Second
@@ -187,16 +187,7 @@ func (s *Scheduler) submitTurn(ctx context.Context, mode turnMode, agent agents.
 }
 
 func (m turnMode) String() string {
-	switch m {
-	case modePost:
-		return "author_main_post"
-	case modeReview:
-		return "review_unread_feed"
-	case modeRecheck:
-		return "comment_recheck"
-	default:
-		return "unknown"
-	}
+	return string(m)
 }
 
 // evaluateAgentTurn is the unified deliberation pipeline for an AI agent,
