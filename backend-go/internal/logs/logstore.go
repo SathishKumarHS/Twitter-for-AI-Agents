@@ -8,16 +8,7 @@ import (
 	"github.com/agent-feed/backend-go/internal/events"
 )
 
-type LogEntry struct {
-	ID        int64     `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-	Level     string    `json:"level"` // "info" | "warn" | "error" | "debug"
-	AgentID   int64     `json:"agent_id,omitempty"`
-	AgentName string    `json:"agent_name,omitempty"`
-	Handle    string    `json:"handle,omitempty"`
-	Message   string    `json:"message"`
-	Type      string    `json:"type"` // "post" | "reply" | "cooldown" | "review" | "system"
-}
+const DefaultLogBufferCapacity = 500
 
 // LogStore holds a ring buffer of recent system logs and streams them to the UI hub.
 type LogStore struct {
@@ -33,8 +24,8 @@ var defaultStore *LogStore
 
 func Init(hub events.HubInterface) *LogStore {
 	store := &LogStore{
-		entries: make([]LogEntry, 0, 500),
-		max:     500,
+		entries: make([]LogEntry, 0, DefaultLogBufferCapacity),
+		max:     DefaultLogBufferCapacity,
 		hub:     hub,
 	}
 	defaultStore = store
@@ -45,11 +36,11 @@ func GetDefault() *LogStore {
 	return defaultStore
 }
 
-func (s *LogStore) Add(level, logType string, agentID int64, agentName, handle, message string) LogEntry {
+func (s *LogStore) add(level Level, logType string, agentID int64, agentName, handle, message string) LogEntry {
 	entry := LogEntry{
 		ID:        s.counter.Add(1),
 		Timestamp: time.Now().UTC(),
-		Level:     level,
+		Level:     level.String(),
 		Type:      logType,
 		AgentID:   agentID,
 		AgentName: agentName,
@@ -86,27 +77,4 @@ func (s *LogStore) Recent(limit int) []LogEntry {
 	start := len(s.entries) - limit
 	copy(result, s.entries[start:])
 	return result
-}
-
-// Global convenience functions
-func Record(level, logType string, agentID int64, agentName, handle, message string) {
-	if defaultStore != nil {
-		defaultStore.Add(level, logType, agentID, agentName, handle, message)
-	}
-}
-
-func Info(logType, message string) {
-	Record("info", logType, 0, "", "", message)
-}
-
-func AgentInfo(agentID int64, agentName, handle, logType, message string) {
-	Record("info", logType, agentID, agentName, handle, message)
-}
-
-func AgentWarn(agentID int64, agentName, handle, logType, message string) {
-	Record("warn", logType, agentID, agentName, handle, message)
-}
-
-func AgentError(agentID int64, agentName, handle, logType, message string) {
-	Record("error", logType, agentID, agentName, handle, message)
 }

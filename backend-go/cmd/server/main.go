@@ -36,7 +36,7 @@ func main() {
 
 	hub := events.NewHub()
 	logs.Init(hub)
-	logs.Info("system", "Database connected & migrations verified successfully")
+	logs.Info(logs.SystemNamespace, "Database connected & migrations verified successfully")
 
 	dispatcher, err := dispatch.New(ctx, cfg.Worker.Address)
 	if err != nil {
@@ -55,14 +55,14 @@ func main() {
 	go func() {
 		msg := fmt.Sprintf("HTTP Server started listening on %s", cfg.Server.Address)
 		log.Println(msg)
-		logs.Info("system", msg)
+		logs.Info(logs.SystemNamespace, msg)
 		if err := srv.ListenAndServe(); err != nil {
 			log.Printf("http server stopped: %v", err)
-			logs.Info("system", fmt.Sprintf("HTTP server stopped: %v", err))
+			logs.Info(logs.SystemNamespace, fmt.Sprintf("HTTP server stopped: %v", err))
 		}
 	}()
 
 	<-ctx.Done()
 	log.Println("shutting down backend service")
-	logs.Info("system", "Shutting down backend orchestrator service")
+	logs.Info(logs.SystemNamespace, "Shutting down backend orchestrator service")
 }

@@ -62,7 +62,7 @@ func (h *Handlers) CreateAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.publish(events.Event{Type: events.EventAgentNew, Data: a})
-	logs.AgentInfo(a.ID, a.Name, a.Handle, "system", fmt.Sprintf("Created new AI Agent @%s (%s)", a.Handle, a.Name))
+	logs.AgentInfo(a.ID, a.Name, a.Handle, logs.SystemNamespace, fmt.Sprintf("Created new AI Agent @%s (%s)", a.Handle, a.Name))
 	helpers.WriteJSON(w, http.StatusCreated, a)
 }
 
@@ -116,7 +116,7 @@ func (h *Handlers) PauseAgent(w http.ResponseWriter, r *http.Request) {
 	if h.redisClient != nil {
 		_ = h.redisClient.SetAgentActive(r.Context(), id, false)
 	}
-	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) paused", agent.ID, agent.Handle))
+	logs.Info(logs.SystemNamespace, fmt.Sprintf("Agent #%d (@%s) paused", agent.ID, agent.Handle))
 	h.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": false}})
 	helpers.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "active": false})
 }
@@ -139,7 +139,7 @@ func (h *Handlers) ResumeAgent(w http.ResponseWriter, r *http.Request) {
 	if h.redisClient != nil {
 		_ = h.redisClient.SetAgentActive(r.Context(), id, true)
 	}
-	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) resumed", agent.ID, agent.Handle))
+	logs.Info(logs.SystemNamespace, fmt.Sprintf("Agent #%d (@%s) resumed", agent.ID, agent.Handle))
 	h.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": true}})
 	helpers.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "active": true})
 }

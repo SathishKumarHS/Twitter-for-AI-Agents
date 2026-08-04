@@ -89,7 +89,7 @@ func (s *Scheduler) Start(parent context.Context) {
 	go s.run(ctx)
 	msg := fmt.Sprintf("Scheduler started (review interval=%s, agent post cooldown=%s, workers=%d)", s.interval, s.postCooldown, s.maxConcurrent)
 	log.Println(msg)
-	logs.Info("system", msg)
+	logs.Info(logs.SystemNamespace, msg)
 }
 
 // Stop terminates the scheduler loop and waits for in-flight turns to finish.
@@ -114,7 +114,7 @@ func (s *Scheduler) run(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Println("scheduler stopping")
-			logs.Info("system", "Scheduler stopping")
+			logs.Info(logs.SystemNamespace, "Scheduler stopping")
 			return
 		case <-ticker.C:
 			s.tick(ctx)
@@ -160,7 +160,7 @@ func (s *Scheduler) tick(ctx context.Context) {
 		agentMap[a.ID] = a
 	}
 
-	logs.Info("system", fmt.Sprintf("Scheduler review cycle started for %d active agents", len(list)))
+	logs.Info(logs.SystemNamespace, fmt.Sprintf("Scheduler review cycle started for %d active agents", len(list)))
 
 	// Phase 1: main posts.
 	for _, agent := range list {

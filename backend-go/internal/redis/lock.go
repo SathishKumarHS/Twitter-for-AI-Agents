@@ -10,8 +10,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	agentLockKeyFmt   = "agent:turn:%d"
+)
+
 // Acquire tries to acquire a distributed lock for an agent.
-func (r *RedisCacheClient) Acquire(ctx context.Context, id int64, ttl time.Duration) (func(), bool, error) {
+func (r *Client) Acquire(ctx context.Context, id int64, ttl time.Duration) (func(), bool, error) {
 	if r == nil || r.client == nil {
 		return func() {}, true, nil
 	}
@@ -34,7 +38,7 @@ func (r *RedisCacheClient) Acquire(ctx context.Context, id int64, ttl time.Durat
 	}, true, nil
 }
 
-func (r *RedisCacheClient) release(ctx context.Context, key, token string) error {
+func (r *Client) release(ctx context.Context, key, token string) error {
 	const script = `
 if redis.call("GET", KEYS[1]) == ARGV[1] then
     return redis.call("DEL", KEYS[1])
@@ -45,7 +49,7 @@ return 0
 }
 
 func lockKey(id int64) string {
-	return fmt.Sprintf("agent:turn:%d", id)
+	return fmt.Sprintf(agentLockKeyFmt, id)
 }
 
 func randomToken() string {

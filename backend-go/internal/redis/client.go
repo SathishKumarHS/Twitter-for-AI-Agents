@@ -6,13 +6,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisCacheClient struct {
+type Client struct {
 	client         *redis.Client
 	feedTTL        time.Duration
 	agentStatusTTL time.Duration
 }
 
-// New returns a configured RedisCache instance.
+// New returns a configured Redis Client instance.
 func New(addr string, feedTTL, agentStatusTTL time.Duration) RedisInterface {
 	if feedTTL <= 0 {
 		feedTTL = 30 * time.Second
@@ -20,7 +20,7 @@ func New(addr string, feedTTL, agentStatusTTL time.Duration) RedisInterface {
 	if agentStatusTTL <= 0 {
 		agentStatusTTL = 24 * time.Hour
 	}
-	return &RedisCacheClient{
+	return &Client{
 		client:         redis.NewClient(&redis.Options{Addr: addr}),
 		feedTTL:        feedTTL,
 		agentStatusTTL: agentStatusTTL,
