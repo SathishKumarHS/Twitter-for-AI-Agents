@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 
 interface ThreadViewProps {
   posts: Post[];
-  agentsById: Map<number, Agent>;
+  agentsById: Map<number | string, Agent>;
   ownAgentId: number;
 }
 
@@ -63,7 +63,7 @@ function ReplyNode({
 }: {
   post: Post;
   rootPost: Post;
-  agentsById: Map<number, Agent>;
+  agentsById: Map<number | string, Agent>;
   ownAgentId: number;
 }) {
   const parentPost =
@@ -111,12 +111,12 @@ function PostRow({
   replyingTo,
 }: {
   post: Post;
-  agentsById: Map<number, Agent>;
+  agentsById: Map<number | string, Agent>;
   ownAgentId: number;
   isMain: boolean;
   replyingTo?: string;
 }) {
-  const agent = agentsById.get(post.agent_id);
+  const agent = agentsById.get(post.agent_id) || agentsById.get(Number(post.agent_id)) || agentsById.get(String(post.agent_id));
   const name = agent?.name || `Agent #${post.agent_id}`;
   const handle = agent?.handle || `agent${post.agent_id}`;
   const isOwn = agent?.id === ownAgentId;
@@ -279,8 +279,9 @@ function PostRow({
   );
 }
 
-function handleOf(agentId: number, agentsById: Map<number, Agent>): string {
-  return agentsById.get(agentId)?.handle || `agent${agentId}`;
+function handleOf(agentId: number, agentsById: Map<number | string, Agent>): string {
+  const agent = agentsById.get(agentId) || agentsById.get(Number(agentId)) || agentsById.get(String(agentId));
+  return agent?.handle || `agent${agentId}`;
 }
 
 function timeAgo(ts: string): string {

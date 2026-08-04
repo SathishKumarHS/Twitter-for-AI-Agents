@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/agent-feed/backend-go/internal/cache"
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/db/agents"
 	"github.com/agent-feed/backend-go/internal/db/posts"
@@ -19,8 +20,6 @@ import (
 )
 
 // turn is one unit of work for the worker pool: a single agent deliberation.
-// mode decides which phase of the 10-minute cycle runs, and targetPost is set
-// when a follower/mention/comment notification pulled the agent in.
 type turn struct {
 	mode       turnMode
 	agent      agents.Agent
@@ -32,17 +31,11 @@ type turn struct {
 type turnMode int
 
 const (
-	// modePost authors a new main post when the 10-min cooldown has expired.
 	modePost turnMode = iota
-	// modeReview reviews every post published since the agent's watermark,
-	// replying to each one the AI thinks is worth engaging with.
 	modeReview
-	// modeRecheck re-reviews one specific post/thread (comment-triggered).
 	modeRecheck
 )
 
-// lockTTLMargin keeps the distributed lock alive a little past the turn's
-// deadline so a turn that runs to its full timeout is still covered.
 const lockTTLMargin = 60 * time.Second
 
 // Scheduler orchestrates periodic agent deliberations and subscriber notifications.
@@ -57,17 +50,14 @@ type Scheduler struct {
 	db            *db.DB
 	dispatcher    *dispatch.Dispatcher
 	hub           *events.Hub
+	cache         cache.CacheInterface
 	rootCtx       context.Context
 	cancel        context.CancelFunc
 	done          chan struct{}
 }
 
-// New builds a scheduler over the domain stores and event hub. Agent turns are
-// executed on a worker pool of maxConcurrent goroutines fed by an unbounded
-// queue, so no turn is ever dropped even when the pool is busy; each turn is
-// hard-deadlined to turnTimeout so a slow LLM cannot stall the review loop, and
-// serialized per agent with the provided distributed Locker.
-func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks lock.Locker, db *db.DB, d *dispatch.Dispatcher, hub *events.Hub) *Scheduler {
+// New builds a scheduler over the domain stores and event hub.
+func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks lock.Locker, db *db.DB, d *dispatch.Dispatcher, hub *events.Hub, c cache.CacheInterface) *Scheduler {
 	return &Scheduler{
 		interval:      interval,
 		postCooldown:  postCooldown,
@@ -78,7 +68,14 @@ func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, l
 		db:            db,
 		dispatcher:    d,
 		hub:           hub,
+		cache:         c,
 		done:          make(chan struct{}),
+	}
+}
+
+func (s *Scheduler) invalidateFeedCache(ctx context.Context) {
+	if s.cache != nil {
+		_ = s.cache.InvalidateFeed(ctx)
 	}
 }
 
@@ -180,6 +177,9 @@ func (s *Scheduler) tick(ctx context.Context) {
 // submitTurn enqueues one agent turn onto the queue. It never drops work: if
 // the pool is saturated the turn simply waits for a free worker.
 func (s *Scheduler) submitTurn(ctx context.Context, mode turnMode, agent agents.Agent, agentMap map[int64]agents.Agent, targetPost *posts.Post) {
+	if !agent.Active {
+		return
+	}
 	select {
 	case s.queue <- turn{mode: mode, agent: agent, agentMap: agentMap, targetPost: targetPost}:
 	case <-ctx.Done():
@@ -211,7 +211,29 @@ func (m turnMode) String() string {
 //     that follow the posting phase.
 //  2. The agent reads everything published since its last review (watermark).
 //  3. Complete AI decision autonomy (AI determines post, reply, or ignore).
+func (s *Scheduler) isAgentActive(ctx context.Context, id int64) bool {
+	if s.cache != nil {
+		if active, found := s.cache.IsAgentActive(ctx, id); found {
+			return active
+		}
+	}
+	latest, err := s.db.AgentsDB.Get(ctx, id)
+	if err != nil {
+		return false
+	}
+	if s.cache != nil {
+		_ = s.cache.SetAgentActive(ctx, id, latest.Active)
+	}
+	return latest.Active
+}
+
 func (s *Scheduler) evaluateAgentTurn(ctx context.Context, t turn) {
+	// Re-check active status via Redis/DB cache in case agent was paused while waiting in queue.
+	if !s.isAgentActive(ctx, t.agent.ID) {
+		logs.AgentInfo(t.agent.ID, t.agent.Name, t.agent.Handle, "turn", fmt.Sprintf("Turn skipped: agent @%s is currently paused", t.agent.Handle))
+		return
+	}
+
 	// Serialize per agent (fleet-wide) so the cooldown check cannot race.
 	release, acquired, err := s.locks.Acquire(ctx, t.agent.ID, s.turnTimeout+lockTTLMargin)
 	if err != nil {
@@ -276,6 +298,7 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent agents.Agent, agen
 	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
 		"id": created.ID, "agent_id": agent.ID, "body": text, "kind": "post",
 	}})
+	s.invalidateFeedCache(ctx)
 	_ = s.db.MemoriesDB.Add(ctx, agent.ID, "learning", "posted: "+truncate(text, 80))
 	log.Printf("scheduler: agent %d (@%s) posted #%d", agent.ID, agent.Handle, created.ID)
 	logs.AgentInfo(agent.ID, agent.Name, agent.Handle, "post", "Published main post #"+strconv.FormatInt(created.ID, 10)+": "+truncate(text, 80))
@@ -357,6 +380,7 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent agents.Agent, post pos
 	s.hub.Publish(events.Event{Type: "post:new", Data: map[string]any{
 		"id": created.ID, "agent_id": agent.ID, "body": text, "kind": "reply", "parent_id": post.ID,
 	}})
+	s.invalidateFeedCache(ctx)
 	_ = s.db.MemoriesDB.Add(ctx, agent.ID, "learning", "replied to post #"+itoa(post.ID))
 	log.Printf("scheduler: agent %d (@%s) replied to post #%d with reply #%d", agent.ID, agent.Handle, post.ID, created.ID)
 	logs.AgentInfo(agent.ID, agent.Name, agent.Handle, "reply", "Replied to post #"+strconv.FormatInt(post.ID, 10)+" with comment #"+strconv.FormatInt(created.ID, 10)+": "+truncate(text, 80))
@@ -378,9 +402,11 @@ func (s *Scheduler) notifySubscribers(ctx context.Context, created posts.Post, a
 			}
 		}
 	} else {
-		// New main post: notify only the author's followers.
-		if followers, err := s.db.FollowsDB.Followers(ctx, created.AgentID); err == nil {
-			followerIDs = followers
+		// New main post: broadcast notification turn to all network agents.
+		for id := range agentMap {
+			if id != created.AgentID {
+				followerIDs = append(followerIDs, id)
+			}
 		}
 	}
 
@@ -397,9 +423,10 @@ func (s *Scheduler) notifySubscribers(ctx context.Context, created posts.Post, a
 
 	for _, targetID := range selectNotifyTargets(created, subscriberIDs, followerIDs) {
 		if targetAgent, ok := agentMap[targetID]; ok {
-			ag := targetAgent
-			p := created
-			s.submitTurn(ctx, modeRecheck, ag, agentMap, &p)
+			if s.isAgentActive(ctx, targetID) {
+				p := created
+				s.submitTurn(ctx, modeRecheck, targetAgent, agentMap, &p)
+			}
 		}
 	}
 }

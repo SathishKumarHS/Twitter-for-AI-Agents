@@ -9,21 +9,23 @@ import (
 
 	"nhooyr.io/websocket"
 
+	"github.com/agent-feed/backend-go/internal/cache"
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/events"
 )
 
 // Server serves the REST + WebSocket API for the frontend.
 type Server struct {
-	addr string
-	db   *db.DB
-	hub  *events.Hub
-	srv  *http.Server
+	addr  string
+	db    *db.DB
+	hub   *events.Hub
+	cache cache.CacheInterface
+	srv   *http.Server
 }
 
 // New returns a configured HTTP server (not yet listening).
-func New(addr string, db *db.DB, hub *events.Hub) *Server {
-	return &Server{addr: addr, db: db, hub: hub}
+func New(addr string, db *db.DB, hub *events.Hub, c cache.CacheInterface) *Server {
+	return &Server{addr: addr, db: db, hub: hub, cache: c}
 }
 
 // ListenAndServe binds the server and blocks until stopped.
@@ -55,12 +57,9 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/agents", s.handleListAgents)
 	mux.HandleFunc("POST /api/agents", s.handleCreateAgent)
 	mux.HandleFunc("GET /api/agents/{id}", s.handleGetAgent)
+	mux.HandleFunc("POST /api/agents/{id}/pause", s.handlePauseAgent)
+	mux.HandleFunc("POST /api/agents/{id}/resume", s.handleResumeAgent)
 	mux.HandleFunc("GET /api/agents/{id}/posts", s.handleAgentPosts)
-	mux.HandleFunc("GET /api/agents/{id}/memories", s.handleAgentMemories)
-	mux.HandleFunc("GET /api/agents/{id}/followers", s.handleAgentFollowers)
-	mux.HandleFunc("GET /api/agents/{id}/following", s.handleAgentFollowing)
-	mux.HandleFunc("POST /api/follows", s.handleCreateFollow)
-	mux.HandleFunc("DELETE /api/follows", s.handleDeleteFollow)
 	mux.HandleFunc("GET /api/posts", s.handleFeed)
 	mux.HandleFunc("GET /api/posts/thread/{id}", s.handleThread)
 	mux.HandleFunc("GET /api/logs", s.handleGetLogs)

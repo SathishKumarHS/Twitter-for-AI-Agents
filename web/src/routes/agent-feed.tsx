@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Agent, listAgents, feed, getThread } from "@/lib/api";
 import { AgentCard, Avatar } from "@/components/agent-card";
 import { ThreadView } from "@/components/thread-view";
@@ -25,12 +25,15 @@ export function AgentFeed() {
     initialData: [],
   });
 
-  const agentsById = useMemo(
-    () => new Map(agents.map((a: Agent) => [a.id, a])),
-    [agents]
-  );
-
-  const closeComposer = () => setParams({});
+  const agentsById = useMemo(() => {
+    const map = new Map<number | string, Agent>();
+    agents.forEach((a: Agent) => {
+      map.set(a.id, a);
+      map.set(Number(a.id), a);
+      map.set(String(a.id), a);
+    });
+    return map;
+  }, [agents]);
 
   // Group feed posts by root thread ID or parent post
   const rootThreadIds = useMemo(() => {
@@ -258,7 +261,7 @@ function FeedThreadItem({
   agentsById,
 }: {
   rootId: number;
-  agentsById: Map<number, Agent>;
+  agentsById: Map<number | string, Agent>;
 }) {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["thread", rootId],

@@ -3,10 +3,11 @@ package httpapi
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
-	"fmt"
+
 	"github.com/agent-feed/backend-go/internal/db/agents"
 	dberrors "github.com/agent-feed/backend-go/internal/db/db_errors"
 	"github.com/agent-feed/backend-go/internal/events"
@@ -31,7 +32,7 @@ func pathID(r *http.Request) (int64, error) {
 }
 
 func (s *Server) handleListAgents(w http.ResponseWriter, r *http.Request) {
-	list, err := s.db.AgentsDB.ListActive(r.Context())
+	list, err := s.db.AgentsDB.ListAll(r.Context())
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "list agents: "+err.Error())
 		return
@@ -115,18 +116,50 @@ func (s *Server) handleAgentPosts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, list)
 }
 
-func (s *Server) handleAgentMemories(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handlePauseAgent(w http.ResponseWriter, r *http.Request) {
 	id, err := pathID(r)
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, "invalid agent id")
 		return
 	}
-	list, err := s.db.MemoriesDB.List(r.Context(), id, 30)
+	agent, err := s.db.AgentsDB.Get(r.Context(), id)
 	if err != nil {
+		writeErr(w, http.StatusNotFound, "agent not found")
+		return
+	}
+	if err := s.db.AgentsDB.SetActive(r.Context(), id, false); err != nil {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, list)
+	if s.cache != nil {
+		_ = s.cache.SetAgentActive(r.Context(), id, false)
+	}
+	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) paused", agent.ID, agent.Handle))
+	s.hub.Publish(events.Event{Type: "agent:updated", Data: map[string]any{"id": id, "active": false}})
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "active": false})
+}
+
+func (s *Server) handleResumeAgent(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid agent id")
+		return
+	}
+	agent, err := s.db.AgentsDB.Get(r.Context(), id)
+	if err != nil {
+		writeErr(w, http.StatusNotFound, "agent not found")
+		return
+	}
+	if err := s.db.AgentsDB.SetActive(r.Context(), id, true); err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if s.cache != nil {
+		_ = s.cache.SetAgentActive(r.Context(), id, true)
+	}
+	logs.Info("system", fmt.Sprintf("Agent #%d (@%s) resumed", agent.ID, agent.Handle))
+	s.hub.Publish(events.Event{Type: "agent:updated", Data: map[string]any{"id": id, "active": true}})
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "active": true})
 }
 
 func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
@@ -136,84 +169,30 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 			limit = v
 		}
 	}
+
+	if s.cache != nil {
+		if val := s.cache.GetFeed(r.Context(), limit); val != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("X-Cache", "HIT")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(*val))
+			return
+		}
+	}
+
 	list, err := s.db.PostDB.Recent(r.Context(), limit)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, list)
-}
 
-type followReq struct {
-	FollowerID  int64 `json:"follower_id"`
-	FollowingID int64 `json:"following_id"`
-}
+	if s.cache != nil {
+		if b, err := json.Marshal(list); err == nil {
+			_ = s.cache.SetFeed(r.Context(), limit, b)
+		}
+	}
 
-func (s *Server) handleCreateFollow(w http.ResponseWriter, r *http.Request) {
-	var req followReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeErr(w, http.StatusBadRequest, "invalid body: "+err.Error())
-		return
-	}
-	if req.FollowerID == 0 || req.FollowingID == 0 {
-		writeErr(w, http.StatusBadRequest, "follower_id and following_id are required")
-		return
-	}
-	if req.FollowerID == req.FollowingID {
-		writeErr(w, http.StatusBadRequest, "an agent cannot follow itself")
-		return
-	}
-	if err := s.db.FollowsDB.Add(r.Context(), req.FollowerID, req.FollowingID); err != nil {
-		writeErr(w, http.StatusInternalServerError, "create follow: "+err.Error())
-		return
-	}
-	logs.Info("system", fmt.Sprintf("Agent #%d followed Agent #%d", req.FollowerID, req.FollowingID))
-	writeJSON(w, http.StatusCreated, map[string]bool{"ok": true})
-}
-
-func (s *Server) handleDeleteFollow(w http.ResponseWriter, r *http.Request) {
-	var req followReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeErr(w, http.StatusBadRequest, "invalid body: "+err.Error())
-		return
-	}
-	if req.FollowerID == 0 || req.FollowingID == 0 {
-		writeErr(w, http.StatusBadRequest, "follower_id and following_id are required")
-		return
-	}
-	if err := s.db.FollowsDB.Remove(r.Context(), req.FollowerID, req.FollowingID); err != nil {
-		writeErr(w, http.StatusInternalServerError, "delete follow: "+err.Error())
-		return
-	}
-	logs.Info("system", fmt.Sprintf("Agent #%d unfollowed Agent #%d", req.FollowerID, req.FollowingID))
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-}
-
-func (s *Server) handleAgentFollowers(w http.ResponseWriter, r *http.Request) {
-	id, err := pathID(r)
-	if err != nil {
-		writeErr(w, http.StatusBadRequest, "invalid agent id")
-		return
-	}
-	list, err := s.db.FollowsDB.Followers(r.Context(), id)
-	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, list)
-}
-
-func (s *Server) handleAgentFollowing(w http.ResponseWriter, r *http.Request) {
-	id, err := pathID(r)
-	if err != nil {
-		writeErr(w, http.StatusBadRequest, "invalid agent id")
-		return
-	}
-	list, err := s.db.FollowsDB.Following(r.Context(), id)
-	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+	w.Header().Set("X-Cache", "MISS")
 	writeJSON(w, http.StatusOK, list)
 }
 

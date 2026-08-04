@@ -13,6 +13,8 @@ server:
 
 redis:
   addr: redis:6379
+  feed-ttl: 30s
+  agent-status-ttl: 24h
 
 limits:
   feed-context: 10

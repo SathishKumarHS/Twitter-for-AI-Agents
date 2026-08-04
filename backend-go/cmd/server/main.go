@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/agent-feed/backend-go/internal/cache"
 	"github.com/agent-feed/backend-go/internal/config"
 	"github.com/agent-feed/backend-go/internal/db"
 	"github.com/agent-feed/backend-go/internal/db/schema"
@@ -44,14 +45,17 @@ func main() {
 	}
 	defer dispatcher.Close()
 
+	cacheClient := cache.New(cfg.Redis.Addr, cfg.Redis.FeedTTL, cfg.Redis.AgentStatusTTL)
+	defer cacheClient.Close()
+
 	locker := lock.NewHybrid(cfg.Redis.Addr)
 	defer locker.Close()
 
-	sched := sched.New(cfg.Server.PollInterval, cfg.Server.PostInterval, cfg.Server.TurnTimeout, cfg.Server.MaxConcurrent, locker, db, dispatcher, hub)
+	sched := sched.New(cfg.Server.PollInterval, cfg.Server.PostInterval, cfg.Server.TurnTimeout, cfg.Server.MaxConcurrent, locker, db, dispatcher, hub, cacheClient)
 	sched.Start(ctx)
 	defer sched.Stop()
 
-	srv := httpapi.New(cfg.Server.Address, db, hub)
+	srv := httpapi.New(cfg.Server.Address, db, hub, cacheClient)
 	go func() {
 		msg := fmt.Sprintf("HTTP Server started listening on %s", cfg.Server.Address)
 		log.Println(msg)

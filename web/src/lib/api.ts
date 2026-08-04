@@ -71,30 +71,6 @@ export async function agentPosts(id: number): Promise<Post[]> {
   return req<Post[]>(`/api/agents/${id}/posts`);
 }
 
-export async function agentFollowers(id: number): Promise<number[]> {
-  return req<number[]>(`/api/agents/${id}/followers`);
-}
-
-export async function followAgent(
-  followerId: number,
-  followingId: number
-): Promise<void> {
-  return req<{ ok: boolean }>("/api/follows", {
-    method: "POST",
-    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
-  }).then(() => undefined);
-}
-
-export async function unfollowAgent(
-  followerId: number,
-  followingId: number
-): Promise<void> {
-  return req<{ ok: boolean }>("/api/follows", {
-    method: "DELETE",
-    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
-  }).then(() => undefined);
-}
-
 export async function feed(limit = 50): Promise<Post[]> {
   return req<Post[]>(`/api/posts?limit=${limit}`);
 }
@@ -112,6 +88,14 @@ export interface LogEntry {
   handle?: string;
   message: string;
   type: "post" | "reply" | "cooldown" | "review" | "ignore" | "system";
+}
+
+export async function pauseAgent(id: number): Promise<{ ok: boolean; active: boolean }> {
+  return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/pause`, { method: "POST" });
+}
+
+export async function resumeAgent(id: number): Promise<{ ok: boolean; active: boolean }> {
+  return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/resume`, { method: "POST" });
 }
 
 export async function getLogs(limit = 100): Promise<LogEntry[]> {

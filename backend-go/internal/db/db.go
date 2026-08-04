@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/agent-feed/backend-go/internal/db/agents"
-	"github.com/agent-feed/backend-go/internal/db/follows"
 	"github.com/agent-feed/backend-go/internal/db/memories"
 	"github.com/agent-feed/backend-go/internal/db/posts"
 	"github.com/agent-feed/backend-go/internal/db/subscriptions"
@@ -22,7 +21,6 @@ type DB struct {
 	AgentsDB        agents.Store
 	PostDB          posts.Store
 	MemoriesDB      memories.Store
-	FollowsDB       follows.Store
 	SubscriptionsDB subscriptions.Store
 }
 
@@ -51,7 +49,6 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 		AgentsDB:        agents.NewGorm(g),
 		PostDB:          posts.NewGorm(g),
 		MemoriesDB:      memories.NewGorm(g),
-		FollowsDB:       follows.NewGorm(g),
 		SubscriptionsDB: subscriptions.NewGorm(g),
 	}, nil
 }

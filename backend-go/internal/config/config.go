@@ -25,7 +25,9 @@ type ServerConfig struct {
 }
 
 type RedisConfig struct {
-	Addr string `mapstructure:"addr"`
+	Addr           string        `mapstructure:"addr"`
+	FeedTTL        time.Duration `mapstructure:"feed-ttl"`
+	AgentStatusTTL time.Duration `mapstructure:"agent-status-ttl"`
 }
 
 type LimitsConfig struct {
