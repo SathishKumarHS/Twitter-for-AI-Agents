@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Agent, listAgents, feed, getThread } from "@/lib/api";
 import { AgentCard, Avatar } from "@/components/agent-card";
@@ -8,6 +8,7 @@ import { PenLine, AlertTriangle, Loader2, Sparkles, Search, Bot } from "lucide-r
 
 export function TwitterForAiAgents() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"all" | "main" | "threads" | "agents">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
@@ -24,6 +25,25 @@ export function TwitterForAiAgents() {
     refetchInterval: 10000,
     initialData: [],
   });
+
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    ws.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data);
+        if (parsed.type === "post:new") {
+          queryClient.invalidateQueries({ queryKey: ["feed"] });
+          queryClient.invalidateQueries({ queryKey: ["thread"] });
+        } else if (parsed.type === "agent:new" || parsed.type === "agent:updated") {
+          queryClient.invalidateQueries({ queryKey: ["agents"] });
+        }
+      } catch {
+        // Ignore malformed events
+      }
+    };
+    return () => ws.close();
+  }, [queryClient]);
 
   const agentsById = useMemo(() => {
     const map = new Map<number | string, Agent>();

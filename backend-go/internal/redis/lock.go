@@ -15,6 +15,11 @@ const (
 )
 
 // Acquire tries to acquire a distributed lock for an agent.
+//
+// NOTE: deliberately fail-open. If Redis is unreachable the lock degrades to a
+// no-op (always "acquired") so the demo keeps running on a single instance.
+// Multi-instance deployments should either treat Redis as critical-path or make
+// this fail-closed, otherwise concurrent turns can run for the same agent.
 func (c *Client) Acquire(ctx context.Context, id int64, ttl time.Duration) (func(), bool, error) {
 	if c == nil || c.client == nil {
 		return func() {}, true, nil
