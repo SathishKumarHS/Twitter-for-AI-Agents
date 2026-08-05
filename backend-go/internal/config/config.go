@@ -57,7 +57,8 @@ func LoadConfig() Config {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("config/" + env)
 	viper.AddConfigPath("backend-go/config/" + env)
-	viper.AddConfigPath("../backend-go/config/" + env)
+	viper.AddConfigPath("../config/" + env)
+	viper.AddConfigPath("../../config/" + env)
 
 	if err := viper.ReadInConfig(); err != nil {
 		slog.Error("Error reading config file", "env", env, "error", err)

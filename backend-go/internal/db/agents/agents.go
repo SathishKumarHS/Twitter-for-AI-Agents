@@ -47,7 +47,7 @@ func (s *AgentsDB) Get(ctx context.Context, id int64) (*model.Agent, error) {
 
 func (s *AgentsDB) GetByHandle(ctx context.Context, handle string) (*model.Agent, error) {
 	var a model.Agent
-	if err := s.g.WithContext(ctx).Where("LOWER(handle) = ?", handle).First(&a).Error; err != nil {
+	if err := s.g.WithContext(ctx).Where("LOWER(handle) = LOWER(?)", handle).First(&a).Error; err != nil {
 		if dberrors.IsNoRows(err) {
 			return nil, dberrors.ErrNotFound
 		}

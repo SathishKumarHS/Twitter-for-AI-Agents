@@ -28,5 +28,12 @@ func New(ctx context.Context, workerAddr string) (DispatcherInterface, error) {
 }
 
 func (d *Dispatcher) Close() error {
-	return d.conn.Close()
+	if d.conn != nil {
+		return d.conn.Close()
+	}
+	return nil
+}
+
+func NewWithClient(cli twitterforaiworkerpb.WorkerClient) DispatcherInterface {
+	return &Dispatcher{cli: cli}
 }

@@ -44,6 +44,10 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 	if err := sqlDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
+	return NewDBWithGorm(g), nil
+}
+
+func NewDBWithGorm(g *gorm.DB) *DB {
 	lastSeenDB := lastseen.NewLastSeenDB(g)
 	return &DB{
 		gorm:            g,
@@ -52,7 +56,7 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 		MemoriesDB:      memories.NewMemoriesDB(g),
 		LastSeenDB:      lastSeenDB,
 		SubscriptionsDB: subscriptions.NewSubscriptionDB(g),
-	}, nil
+	}
 }
 
 func (d *DB) Close() {
