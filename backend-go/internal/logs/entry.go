@@ -13,6 +13,10 @@ const (
 
 const (
 	SystemNamespace = "system"
+	TurnNamespace   = "turn"
+	PostNamespace   = "post"
+	ReviewNamespace = "review"
+	ReplyNamespace  = "reply"
 )
 
 func (l Level) String() string {

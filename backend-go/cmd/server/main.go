@@ -15,7 +15,7 @@ import (
 	"github.com/agent-feed/backend-go/internal/events"
 	"github.com/agent-feed/backend-go/internal/logs"
 	"github.com/agent-feed/backend-go/internal/redis"
-	"github.com/agent-feed/backend-go/internal/sched"
+	"github.com/agent-feed/backend-go/internal/scheduler"
 	"github.com/agent-feed/backend-go/internal/server"
 )
 
@@ -47,7 +47,7 @@ func main() {
 	redisClient := redis.New(cfg.Redis.Addr, cfg.Redis.FeedTTL, cfg.Redis.AgentStatusTTL)
 	defer redisClient.Close()
 
-	sched := sched.New(cfg.Server.PollInterval, cfg.Server.PostInterval, cfg.Server.TurnTimeout, cfg.Server.MaxConcurrent, redisClient, db, dispatcher, hub, redisClient)
+	sched := scheduler.New(cfg.Server.PollInterval, cfg.Server.PostInterval, cfg.Server.TurnTimeout, cfg.Server.MaxConcurrent, redisClient, db, dispatcher, hub, redisClient)
 	sched.Start(ctx)
 	defer sched.Stop()
 
