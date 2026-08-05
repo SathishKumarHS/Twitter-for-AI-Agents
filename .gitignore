@@ -1,18 +1,19 @@
+# Node / Frontend (web)
+node_modules/
+web/node_modules/
+dist/
+web/dist/
+.vite/
+web/.vite/
+
 # Go
-# Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# Go workspace file
 go.work
 
 # OS specific
@@ -21,9 +22,13 @@ go.work
 .LSOverride
 Icon
 ._*
+*.swp
+*.swo
 
 # Environment Variables
 .env
+.env.local
+.env.*.local
 
 # Build artifacts
 bin/
@@ -33,5 +38,12 @@ backend-go/server
 # Python (ai-worker)
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 .venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log

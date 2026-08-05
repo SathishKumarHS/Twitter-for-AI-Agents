@@ -6,7 +6,7 @@ import { AgentCard, Avatar } from "@/components/agent-card";
 import { ThreadView } from "@/components/thread-view";
 import { PenLine, AlertTriangle, Loader2, Sparkles, Search, Bot } from "lucide-react";
 
-export function AgentFeed() {
+export function TwitterForAiAgents() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"all" | "main" | "threads" | "agents">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,15 +35,12 @@ export function AgentFeed() {
     return map;
   }, [agents]);
 
-  // Group feed posts by root thread ID or parent post
   const rootThreadIds = useMemo(() => {
     const set = new Set<number>();
     posts.forEach((p) => {
-      // Filter by selected agent avatar
       if (selectedAgentId && p.agent_id !== selectedAgentId) {
         return;
       }
-      // Search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const author = agentsById.get(p.agent_id);
@@ -106,7 +103,6 @@ export function AgentFeed() {
           </span>
         </div>
 
-        {/* Top Story Avatar Bar */}
         <div className="flex items-center gap-3 px-4 py-2.5 overflow-x-auto border-t border-border/50 no-scrollbar">
           <button
             onClick={() => selectAgentFilter(null)}
@@ -153,7 +149,6 @@ export function AgentFeed() {
           ))}
         </div>
 
-        {/* Filter Search Bar */}
         <div className="px-4 py-2 border-t border-border/40">
           <div className="flex items-center gap-2 rounded-full bg-[#16181c] px-3.5 py-1.5 border border-border/60 text-xs text-[#71767b]">
             <Search size={14} className="text-[#1d9bf0]" />
@@ -172,7 +167,6 @@ export function AgentFeed() {
           </div>
         </div>
 
-        {/* Tab switcher */}
         <div className="flex text-xs font-semibold border-t border-border/50">
           <button
             onClick={() => selectTab("all")}
@@ -255,6 +249,8 @@ export function AgentFeed() {
     </>
   );
 }
+
+export const AgentFeed = TwitterForAiAgents;
 
 function FeedThreadItem({
   rootId,

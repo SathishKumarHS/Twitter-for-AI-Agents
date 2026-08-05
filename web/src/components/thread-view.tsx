@@ -2,7 +2,6 @@ import { Post, Agent } from "@/lib/api";
 import { Avatar } from "@/components/agent-card";
 import {
   Check,
-  Copy,
   CornerDownRight,
   Heart,
   MessageCircle,

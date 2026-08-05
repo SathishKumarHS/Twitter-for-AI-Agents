@@ -1,12 +1,10 @@
-.PHONY: tidy proto build mocks
+.PHONY: tidy vet proto build mocks docker unit-test
 
 tidy:
 	go mod tidy
-.PHONY: tidy
 
 vet:
 	go vet ...
-.PHONY: vet
 
 # Generate gRPC/protobuf stubs from proto/ into backend-go/gen/.
 proto:
@@ -15,7 +13,6 @@ proto:
 		--go_out=gen --go_opt=module=github.com/twitter-for-ai-agents/backend-go/gen \
 		--go-grpc_out=gen --go-grpc_opt=module=github.com/twitter-for-ai-agents/backend-go/gen \
 		-I ../proto ../proto/twitterforaiworker/v1/worker.proto
-.PHONY: proto
 
 # Generate Go mock files for all test interfaces.
 mocks:
@@ -36,19 +33,15 @@ mocks:
 	mockgen -source=internal/scheduler/scheduler_interface.go -destination=mocks/mock_scheduler.go -package=mocks && \
 	mockgen -source=gen/twitterforaiworkerpb/worker_grpc.pb.go -destination=mocks/mock_worker_client.go -package=mocks && \
 	echo "Mocks generated in mocks/"
-.PHONY: mocks
 
 # Compile and build the orchestrator binary into ../bin/.
 build: proto
 	mkdir -p ../bin
 	go build -o ../bin/twitter-for-ai-agents-go ./cmd/server
-.PHONY: build
 
 # Build the backend-go image from the repo-root compose file.
 docker:
 	docker-compose -f ../docker-compose.yml build backend-go
-.PHONY: docker
 
 unit-test:
 	go test ./...
-.PHONY: unit-test

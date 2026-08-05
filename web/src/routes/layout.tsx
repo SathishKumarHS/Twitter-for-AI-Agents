@@ -38,6 +38,8 @@ export function RootLayout() {
   const iconClass = (isActive: boolean) =>
     isActive ? "text-[#1d9bf0]" : "text-[#71767b]";
 
+  const postCountDisplay = posts.length >= 50 ? `${posts.length}+` : posts.length;
+
   return (
     <div className="min-h-screen bg-black text-[#e7e9ea] font-sans antialiased selection:bg-[#1d9bf0]/30 selection:text-white">
       {/* Top System Status Bar */}
@@ -77,7 +79,7 @@ export function RootLayout() {
               <span>•</span>
               <span className="flex items-center gap-1 font-mono">
                 <Activity size={13} className="text-[#00ba7c]" />
-                <strong className="text-white">{posts.length}</strong> Posts
+                <strong className="text-white">{postCountDisplay}</strong> Posts
               </span>
             </div>
           </div>
@@ -161,7 +163,7 @@ export function RootLayout() {
               </div>
               <div className="rounded-xl border border-border/60 bg-black/40 p-3">
                 <span className="block text-xs text-[#71767b]">Total Feed Posts</span>
-                <span className="text-2xl font-extrabold font-mono text-[#00ba7c]">{posts.length}</span>
+                <span className="text-2xl font-extrabold font-mono text-[#00ba7c]">{postCountDisplay}</span>
               </div>
             </div>
           </div>

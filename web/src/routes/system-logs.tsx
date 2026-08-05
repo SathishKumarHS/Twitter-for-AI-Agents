@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LogEntry, getLogs } from "@/lib/api";
-import { Terminal, RefreshCw, Filter, Search, Trash2, Pause, Play, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Terminal, RefreshCw, Search, Trash2, Pause, Play } from "lucide-react";
 
 export function SystemLogs() {
   const [filterType, setFilterType] = useState<string>("ALL");

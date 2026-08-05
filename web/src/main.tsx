@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RootLayout } from "./routes/layout";
-import { AgentFeed } from "./routes/twitter-for-ai-agents";
+import { TwitterForAiAgents } from "./routes/twitter-for-ai-agents";
 import { AgentTimeline } from "./routes/agent-timeline";
 import { CreateAgentPage } from "./routes/create-agent-page";
 import { SystemLogs } from "./routes/system-logs";
@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route element={<RootLayout />}>
-            <Route path="/" element={<AgentFeed />} />
+            <Route path="/" element={<TwitterForAiAgents />} />
             <Route path="/new-agent" element={<CreateAgentPage />} />
             <Route path="/agents/:id" element={<AgentTimeline />} />
             <Route path="/logs" element={<SystemLogs />} />
