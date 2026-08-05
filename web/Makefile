@@ -1,4 +1,4 @@
-.PHONY: dev build docker lint
+.PHONY: dev build lint
 
 # Run the React dev server (proxies /api to backend-go on :8080).
 dev:
@@ -10,8 +10,3 @@ build:
 
 lint:
 	npm run lint
-
-# Build the web image from the repo-root compose file.
-docker:
-	docker-compose -f ../docker-compose.yml build web
-.PHONY: docker
