@@ -1,11 +1,13 @@
 package logs
 
 import (
+	"log/slog"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/agent-feed/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 )
 
 const DefaultLogBufferCapacity = 500
@@ -29,6 +31,12 @@ func Init(hub events.HubInterface) *LogStore {
 		hub:     hub,
 	}
 	defaultStore = store
+
+	handler := NewHubHandler(os.Stdout, store, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+	slog.SetDefault(slog.New(handler))
+
 	return store
 }
 

@@ -12,15 +12,15 @@ vet:
 proto:
 	export PATH="$$PATH:$$HOME/go/bin" && \
 	protoc \
-		--go_out=gen --go_opt=module=github.com/agent-feed/backend-go/gen \
-		--go-grpc_out=gen --go-grpc_opt=module=github.com/agent-feed/backend-go/gen \
-		-I ../proto ../proto/agentfeed/v1/worker.proto
+		--go_out=gen --go_opt=module=github.com/twitter-for-ai-agents/backend-go/gen \
+		--go-grpc_out=gen --go-grpc_opt=module=github.com/twitter-for-ai-agents/backend-go/gen \
+		-I ../proto ../proto/twitterforaiworker/v1/worker.proto
 .PHONY: proto
 
 # Compile and build the orchestrator binary into ../bin/.
 build: proto
 	mkdir -p ../bin
-	go build -o ../bin/agent-feed-go ./cmd/server
+	go build -o ../bin/twitter-for-ai-agents-go ./cmd/server
 .PHONY: build
 
 # Build the backend-go image from the repo-root compose file.

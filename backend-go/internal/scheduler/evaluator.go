@@ -3,14 +3,13 @@ package scheduler
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
-	"github.com/agent-feed/backend-go/internal/db/model"
-	"github.com/agent-feed/backend-go/internal/dispatch"
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/logs"
+	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 )
 
 func (s *Scheduler) isAgentActive(ctx context.Context, id int64) bool {
@@ -37,11 +36,10 @@ func (s *Scheduler) evaluateAgentTurn(ctx context.Context, t turn) {
 
 	release, acquired, err := s.locks.Acquire(ctx, t.agent.ID, s.turnTimeout+lockTTLMargin)
 	if err != nil {
-		log.Printf("scheduler: agent %d acquire turn lock: %v", t.agent.ID, err)
+		logs.AgentError(t.agent.ID, t.agent.Name, t.agent.Handle, logs.TurnNamespace, fmt.Sprintf("Failed to acquire turn lock: %v", err))
 		return
 	}
 	if !acquired {
-		log.Printf("scheduler: agent %d turn already in progress elsewhere, skipping", t.agent.ID)
 		logs.AgentWarn(t.agent.ID, t.agent.Name, t.agent.Handle, logs.TurnNamespace, fmt.Sprintf("Turn skipped: agent @%s already in progress elsewhere", t.agent.Handle))
 		return
 	}
@@ -69,12 +67,12 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 
 	recent, rerr := s.db.PostDB.Recent(ctx, 10)
 	if rerr != nil {
-		log.Printf("scheduler: agent %d fetch recent posts: %v", agent.ID, rerr)
+		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.PostNamespace, fmt.Sprintf("Fetch recent posts failed: %v", rerr))
 		return
 	}
 	decision, err := s.dispatcher.Proactive(ctx, agent, recent, s.memories(ctx, agent.ID), agentMap)
 	if err != nil {
-		log.Printf("scheduler: agent %d proactive deliberation failed: %v", agent.ID, err)
+		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.PostNamespace, fmt.Sprintf("Proactive deliberation failed: %v", err))
 		return
 	}
 
@@ -85,7 +83,7 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 
 	created, cerr := s.db.PostDB.Create(ctx, agent.ID, text, 0)
 	if cerr != nil {
-		log.Printf("scheduler: agent %d persist post: %v", agent.ID, cerr)
+		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.PostNamespace, fmt.Sprintf("Persist main post failed: %v", cerr))
 		return
 	}
 	_ = s.db.LastSeenDB.SetSeen(ctx, agent.ID, created.ID)
@@ -95,7 +93,6 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 	}})
 	s.invalidateFeedCache(ctx)
 	_ = s.db.MemoriesDB.Add(ctx, agent.ID, "learning", "posted: "+truncate(text, 80))
-	log.Printf("scheduler: agent %d (@%s) posted #%d", agent.ID, agent.Handle, created.ID)
 	logs.AgentInfo(agent.ID, agent.Name, agent.Handle, logs.PostNamespace, "Published main post #"+strconv.FormatInt(created.ID, 10)+": "+truncate(text, 80))
 	go s.notifySubscribers(s.rootCtx, created, agentMap)
 }
@@ -103,7 +100,7 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 func (s *Scheduler) reviewUnread(ctx context.Context, agent model.Agent, agentMap map[int64]model.Agent) {
 	newPosts, err := s.db.PostDB.NewPostsAfter(ctx, agent.ID)
 	if err != nil {
-		log.Printf("scheduler: agent %d fetch new posts: %v", agent.ID, err)
+		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.ReviewNamespace, fmt.Sprintf("Fetch new posts failed: %v", err))
 		return
 	}
 
@@ -119,7 +116,7 @@ func (s *Scheduler) reviewUnread(ctx context.Context, agent model.Agent, agentMa
 		}
 		if seenMax > s.db.LastSeenDB.LastSeen(ctx, agent.ID) {
 			if err := s.db.LastSeenDB.SetSeen(ctx, agent.ID, seenMax); err != nil {
-				log.Printf("scheduler: agent %d set seen: %v", agent.ID, err)
+				logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.ReviewNamespace, fmt.Sprintf("Set seen post failed: %v", err))
 			}
 		}
 	}
@@ -133,7 +130,7 @@ func (s *Scheduler) reviewTargetPost(ctx context.Context, agent model.Agent, tar
 	seenMax := s.db.LastSeenDB.LastSeen(ctx, agent.ID)
 	if targetPost.ID > seenMax {
 		if err := s.db.LastSeenDB.SetSeen(ctx, agent.ID, targetPost.ID); err != nil {
-			log.Printf("scheduler: agent %d set seen for target post: %v", agent.ID, err)
+			logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.ReviewNamespace, fmt.Sprintf("Set seen target post failed: %v", err))
 		}
 	}
 }
@@ -142,7 +139,6 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent model.Agent, post mode
 	thread := s.threadContext(ctx, post)
 	decision, err := s.dispatcher.Think(ctx, agent, post, thread, s.memories(ctx, agent.ID), agentMap)
 	if err != nil {
-		log.Printf("scheduler: agent %d deliberation on post %d failed: %v", agent.ID, post.ID, err)
 		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.ReviewNamespace, "Deliberation failed on post #"+strconv.FormatInt(post.ID, 10)+": "+err.Error())
 		return
 	}
@@ -159,7 +155,7 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent model.Agent, post mode
 
 	created, cerr := s.db.PostDB.Create(ctx, agent.ID, text, post.ID)
 	if cerr != nil {
-		log.Printf("scheduler: agent %d persist reply: %v", agent.ID, cerr)
+		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.ReplyNamespace, fmt.Sprintf("Persist reply failed: %v", cerr))
 		return
 	}
 	if created.RootID != nil {
@@ -170,7 +166,6 @@ func (s *Scheduler) maybeReply(ctx context.Context, agent model.Agent, post mode
 	}})
 	s.invalidateFeedCache(ctx)
 	_ = s.db.MemoriesDB.Add(ctx, agent.ID, "learning", "replied to post #"+itoa(post.ID))
-	log.Printf("scheduler: agent %d (@%s) replied to post #%d with reply #%d", agent.ID, agent.Handle, post.ID, created.ID)
 	logs.AgentInfo(agent.ID, agent.Name, agent.Handle, logs.ReplyNamespace, "Replied to post #"+strconv.FormatInt(post.ID, 10)+" with comment #"+strconv.FormatInt(created.ID, 10)+": "+truncate(text, 80))
 	go s.notifySubscribers(s.rootCtx, created, agentMap)
 }

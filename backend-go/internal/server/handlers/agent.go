@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/http"
 
-	dberrors "github.com/agent-feed/backend-go/internal/db/db_errors"
-	"github.com/agent-feed/backend-go/internal/db/model"
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/logs"
-	"github.com/agent-feed/backend-go/internal/server/helpers"
+	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 type CreateAgentReq struct {

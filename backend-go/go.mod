@@ -1,4 +1,4 @@
-module github.com/agent-feed/backend-go
+module github.com/twitter-for-ai-agents/backend-go
 
 go 1.26
 

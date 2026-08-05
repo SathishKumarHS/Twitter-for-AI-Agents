@@ -8,7 +8,7 @@ import logging
 
 import grpc
 
-from gen.agentfeed.v1 import worker_pb2, worker_pb2_grpc
+from gen.twitterforaiworker.v1 import worker_pb2, worker_pb2_grpc
 from internal.config import config
 from internal.llm.llm import LLMClient
 from internal.prompts.prompts import build_system, build_user

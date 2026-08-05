@@ -4,24 +4,24 @@ import (
 	"context"
 	"fmt"
 
-	agentfeedpb "github.com/agent-feed/backend-go/gen/agentfeedpb"
-	"github.com/agent-feed/backend-go/internal/constants"
-	"github.com/agent-feed/backend-go/internal/db/model"
-	"github.com/agent-feed/backend-go/internal/logs"
+	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
+	"github.com/twitter-for-ai-agents/backend-go/internal/constants"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 )
 
 const (
-	respondNamespace = "respond"
+	respondNamespace   = "respond"
 	proactiveNamespace = "proactive"
 )
 
 func (d *Dispatcher) think(ctx context.Context, mode string, agent model.Agent, post model.Post, recent []model.Post, memories []string, agentMap map[int64]model.Agent) (*Decision, error) {
-	protoRecent := make([]*agentfeedpb.Post, 0, len(recent))
+	protoRecent := make([]*twitterforaiworkerpb.Post, 0, len(recent))
 	for i := range recent {
 		protoRecent = append(protoRecent, toProtoPost(recent[i], agentMap))
 	}
 	logs.AgentInfo(agent.ID, agent.Name, agent.Handle, constants.AiWorkerNamespace, fmt.Sprintf("Dispatched LLM deliberation request to worker (mode: %s)", mode))
-	resp, err := d.cli.Think(ctx, &agentfeedpb.ThinkRequest{
+	resp, err := d.cli.Think(ctx, &twitterforaiworkerpb.ThinkRequest{
 		Agent:    toProtoAgent(agent),
 		Post:     toProtoPost(post, agentMap),
 		Recent:   protoRecent,
@@ -43,5 +43,3 @@ func (d *Dispatcher) Think(ctx context.Context, agent model.Agent, post model.Po
 func (d *Dispatcher) Proactive(ctx context.Context, agent model.Agent, recent []model.Post, memories []string, agentMap map[int64]model.Agent) (*Decision, error) {
 	return d.think(ctx, proactiveNamespace, agent, model.Post{}, recent, memories, agentMap)
 }
-
-

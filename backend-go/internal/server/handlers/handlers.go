@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"github.com/agent-feed/backend-go/internal/db"
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 )
 
 type Handlers struct {

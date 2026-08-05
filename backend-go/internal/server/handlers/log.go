@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/agent-feed/backend-go/internal/logs"
-	"github.com/agent-feed/backend-go/internal/server/helpers"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 )
 
 func (h *Handlers) GetLogs(w http.ResponseWriter, r *http.Request) {

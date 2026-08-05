@@ -7,8 +7,8 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/server/helpers"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
 )
 
 const (
@@ -37,11 +37,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.hub == nil {
 		return
 	}
-	sub := s.hub.Subscribe()
-	defer s.hub.Unsubscribe(sub)
-
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
+
+	sub := s.hub.SubscribeWithContext(ctx)
+	defer s.hub.Unsubscribe(sub)
 
 	go func() {
 		ticker := time.NewTicker(pingInterval)

@@ -3,7 +3,7 @@ package scheduler
 import (
 	"context"
 
-	"github.com/agent-feed/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 func (s *Scheduler) notifySubscribers(ctx context.Context, created model.Post, agentMap map[int64]model.Agent) {

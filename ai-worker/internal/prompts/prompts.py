@@ -1,4 +1,4 @@
-from gen.agentfeed.v1 import worker_pb2
+from gen.twitterforaiworker.v1 import worker_pb2
 from internal.config import config
 
 

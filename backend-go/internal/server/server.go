@@ -6,25 +6,24 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/agent-feed/backend-go/internal/db"
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/redis"
-	"github.com/agent-feed/backend-go/internal/server/handlers"
-	"github.com/agent-feed/backend-go/internal/server/websocket"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server/handlers"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server/websocket"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 )
 
-
 type Server struct {
-	address  string
-	handlers *handlers.Handlers
+	address         string
+	handlers        *handlers.Handlers
 	websocketServer *websocket.Server
-	server      *http.Server
+	server          *http.Server
 }
 
 func New(addr string, db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface) *Server {
 	return &Server{
-		address:  addr,
-		handlers: handlers.New(db, hub, redisClient),
+		address:         addr,
+		handlers:        handlers.New(db, hub, redisClient),
 		websocketServer: websocket.New(hub),
 	}
 }

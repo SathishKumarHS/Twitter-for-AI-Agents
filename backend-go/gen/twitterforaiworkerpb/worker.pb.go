@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: agentfeed/v1/worker.proto
+// source: twitterforaiworker/v1/worker.proto
 
-package agentfeedpb
+package twitterforaiworkerpb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -40,7 +40,7 @@ type Agent struct {
 
 func (x *Agent) Reset() {
 	*x = Agent{}
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[0]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -52,7 +52,7 @@ func (x *Agent) String() string {
 func (*Agent) ProtoMessage() {}
 
 func (x *Agent) ProtoReflect() protoreflect.Message {
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[0]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -65,7 +65,7 @@ func (x *Agent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Agent.ProtoReflect.Descriptor instead.
 func (*Agent) Descriptor() ([]byte, []int) {
-	return file_agentfeed_v1_worker_proto_rawDescGZIP(), []int{0}
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Agent) GetId() int64 {
@@ -162,7 +162,7 @@ type Post struct {
 
 func (x *Post) Reset() {
 	*x = Post{}
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[1]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -174,7 +174,7 @@ func (x *Post) String() string {
 func (*Post) ProtoMessage() {}
 
 func (x *Post) ProtoReflect() protoreflect.Message {
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[1]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -187,7 +187,7 @@ func (x *Post) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Post.ProtoReflect.Descriptor instead.
 func (*Post) Descriptor() ([]byte, []int) {
-	return file_agentfeed_v1_worker_proto_rawDescGZIP(), []int{1}
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Post) GetId() int64 {
@@ -270,7 +270,7 @@ type ThinkRequest struct {
 
 func (x *ThinkRequest) Reset() {
 	*x = ThinkRequest{}
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[2]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +282,7 @@ func (x *ThinkRequest) String() string {
 func (*ThinkRequest) ProtoMessage() {}
 
 func (x *ThinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[2]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +295,7 @@ func (x *ThinkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThinkRequest.ProtoReflect.Descriptor instead.
 func (*ThinkRequest) Descriptor() ([]byte, []int) {
-	return file_agentfeed_v1_worker_proto_rawDescGZIP(), []int{2}
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ThinkRequest) GetAgent() *Agent {
@@ -343,7 +343,7 @@ type ThinkReply struct {
 
 func (x *ThinkReply) Reset() {
 	*x = ThinkReply{}
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[3]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -355,7 +355,7 @@ func (x *ThinkReply) String() string {
 func (*ThinkReply) ProtoMessage() {}
 
 func (x *ThinkReply) ProtoReflect() protoreflect.Message {
-	mi := &file_agentfeed_v1_worker_proto_msgTypes[3]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -368,7 +368,7 @@ func (x *ThinkReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThinkReply.ProtoReflect.Descriptor instead.
 func (*ThinkReply) Descriptor() ([]byte, []int) {
-	return file_agentfeed_v1_worker_proto_rawDescGZIP(), []int{3}
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ThinkReply) GetAction() string {
@@ -385,11 +385,11 @@ func (x *ThinkReply) GetText() string {
 	return ""
 }
 
-var File_agentfeed_v1_worker_proto protoreflect.FileDescriptor
+var File_twitterforaiworker_v1_worker_proto protoreflect.FileDescriptor
 
-const file_agentfeed_v1_worker_proto_rawDesc = "" +
+const file_twitterforaiworker_v1_worker_proto_rawDesc = "" +
 	"\n" +
-	"\x19agentfeed/v1/worker.proto\x12\tagentfeed\"\xaa\x02\n" +
+	"\"twitterforaiworker/v1/worker.proto\x12\x12twitterforaiworker\"\xaa\x02\n" +
 	"\x05Agent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x16\n" +
 	"\x06handle\x18\x02 \x01(\tR\x06handle\x12\x12\n" +
@@ -414,45 +414,45 @@ const file_agentfeed_v1_worker_proto_rawDesc = "" +
 	"\bmentions\x18\a \x03(\x03R\bmentions\x12#\n" +
 	"\rauthor_handle\x18\b \x01(\tR\fauthorHandle\x12\x1f\n" +
 	"\vauthor_name\x18\t \x01(\tR\n" +
-	"authorName\"\xb4\x01\n" +
-	"\fThinkRequest\x12&\n" +
-	"\x05agent\x18\x01 \x01(\v2\x10.agentfeed.AgentR\x05agent\x12#\n" +
-	"\x04post\x18\x02 \x01(\v2\x0f.agentfeed.PostR\x04post\x12'\n" +
-	"\x06recent\x18\x03 \x03(\v2\x0f.agentfeed.PostR\x06recent\x12\x12\n" +
+	"authorName\"\xcf\x01\n" +
+	"\fThinkRequest\x12/\n" +
+	"\x05agent\x18\x01 \x01(\v2\x19.twitterforaiworker.AgentR\x05agent\x12,\n" +
+	"\x04post\x18\x02 \x01(\v2\x18.twitterforaiworker.PostR\x04post\x120\n" +
+	"\x06recent\x18\x03 \x03(\v2\x18.twitterforaiworker.PostR\x06recent\x12\x12\n" +
 	"\x04mode\x18\x04 \x01(\tR\x04mode\x12\x1a\n" +
 	"\bmemories\x18\x05 \x03(\tR\bmemories\"8\n" +
 	"\n" +
 	"ThinkReply\x12\x16\n" +
 	"\x06action\x18\x01 \x01(\tR\x06action\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text2A\n" +
-	"\x06Worker\x127\n" +
-	"\x05Think\x12\x17.agentfeed.ThinkRequest\x1a\x15.agentfeed.ThinkReplyB>Z<github.com/agent-feed/backend-go/gen/agentfeedpb;agentfeedpbb\x06proto3"
+	"\x04text\x18\x02 \x01(\tR\x04text2S\n" +
+	"\x06Worker\x12I\n" +
+	"\x05Think\x12 .twitterforaiworker.ThinkRequest\x1a\x1e.twitterforaiworker.ThinkReplyB[ZYgithub.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpbb\x06proto3"
 
 var (
-	file_agentfeed_v1_worker_proto_rawDescOnce sync.Once
-	file_agentfeed_v1_worker_proto_rawDescData []byte
+	file_twitterforaiworker_v1_worker_proto_rawDescOnce sync.Once
+	file_twitterforaiworker_v1_worker_proto_rawDescData []byte
 )
 
-func file_agentfeed_v1_worker_proto_rawDescGZIP() []byte {
-	file_agentfeed_v1_worker_proto_rawDescOnce.Do(func() {
-		file_agentfeed_v1_worker_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_agentfeed_v1_worker_proto_rawDesc), len(file_agentfeed_v1_worker_proto_rawDesc)))
+func file_twitterforaiworker_v1_worker_proto_rawDescGZIP() []byte {
+	file_twitterforaiworker_v1_worker_proto_rawDescOnce.Do(func() {
+		file_twitterforaiworker_v1_worker_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_twitterforaiworker_v1_worker_proto_rawDesc), len(file_twitterforaiworker_v1_worker_proto_rawDesc)))
 	})
-	return file_agentfeed_v1_worker_proto_rawDescData
+	return file_twitterforaiworker_v1_worker_proto_rawDescData
 }
 
-var file_agentfeed_v1_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_agentfeed_v1_worker_proto_goTypes = []any{
-	(*Agent)(nil),        // 0: agentfeed.Agent
-	(*Post)(nil),         // 1: agentfeed.Post
-	(*ThinkRequest)(nil), // 2: agentfeed.ThinkRequest
-	(*ThinkReply)(nil),   // 3: agentfeed.ThinkReply
+var file_twitterforaiworker_v1_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_twitterforaiworker_v1_worker_proto_goTypes = []any{
+	(*Agent)(nil),        // 0: twitterforaiworker.Agent
+	(*Post)(nil),         // 1: twitterforaiworker.Post
+	(*ThinkRequest)(nil), // 2: twitterforaiworker.ThinkRequest
+	(*ThinkReply)(nil),   // 3: twitterforaiworker.ThinkReply
 }
-var file_agentfeed_v1_worker_proto_depIdxs = []int32{
-	0, // 0: agentfeed.ThinkRequest.agent:type_name -> agentfeed.Agent
-	1, // 1: agentfeed.ThinkRequest.post:type_name -> agentfeed.Post
-	1, // 2: agentfeed.ThinkRequest.recent:type_name -> agentfeed.Post
-	2, // 3: agentfeed.Worker.Think:input_type -> agentfeed.ThinkRequest
-	3, // 4: agentfeed.Worker.Think:output_type -> agentfeed.ThinkReply
+var file_twitterforaiworker_v1_worker_proto_depIdxs = []int32{
+	0, // 0: twitterforaiworker.ThinkRequest.agent:type_name -> twitterforaiworker.Agent
+	1, // 1: twitterforaiworker.ThinkRequest.post:type_name -> twitterforaiworker.Post
+	1, // 2: twitterforaiworker.ThinkRequest.recent:type_name -> twitterforaiworker.Post
+	2, // 3: twitterforaiworker.Worker.Think:input_type -> twitterforaiworker.ThinkRequest
+	3, // 4: twitterforaiworker.Worker.Think:output_type -> twitterforaiworker.ThinkReply
 	4, // [4:5] is the sub-list for method output_type
 	3, // [3:4] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -460,26 +460,26 @@ var file_agentfeed_v1_worker_proto_depIdxs = []int32{
 	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_agentfeed_v1_worker_proto_init() }
-func file_agentfeed_v1_worker_proto_init() {
-	if File_agentfeed_v1_worker_proto != nil {
+func init() { file_twitterforaiworker_v1_worker_proto_init() }
+func file_twitterforaiworker_v1_worker_proto_init() {
+	if File_twitterforaiworker_v1_worker_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agentfeed_v1_worker_proto_rawDesc), len(file_agentfeed_v1_worker_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_twitterforaiworker_v1_worker_proto_rawDesc), len(file_twitterforaiworker_v1_worker_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_agentfeed_v1_worker_proto_goTypes,
-		DependencyIndexes: file_agentfeed_v1_worker_proto_depIdxs,
-		MessageInfos:      file_agentfeed_v1_worker_proto_msgTypes,
+		GoTypes:           file_twitterforaiworker_v1_worker_proto_goTypes,
+		DependencyIndexes: file_twitterforaiworker_v1_worker_proto_depIdxs,
+		MessageInfos:      file_twitterforaiworker_v1_worker_proto_msgTypes,
 	}.Build()
-	File_agentfeed_v1_worker_proto = out.File
-	file_agentfeed_v1_worker_proto_goTypes = nil
-	file_agentfeed_v1_worker_proto_depIdxs = nil
+	File_twitterforaiworker_v1_worker_proto = out.File
+	file_twitterforaiworker_v1_worker_proto_goTypes = nil
+	file_twitterforaiworker_v1_worker_proto_depIdxs = nil
 }

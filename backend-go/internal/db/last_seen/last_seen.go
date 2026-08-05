@@ -3,7 +3,7 @@ package lastseen
 import (
 	"context"
 
-	"github.com/agent-feed/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"gorm.io/gorm"
 )
 

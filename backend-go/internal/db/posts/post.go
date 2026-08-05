@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	lastseen "github.com/agent-feed/backend-go/internal/db/last_seen"
-	"github.com/agent-feed/backend-go/internal/db/model"
+	lastseen "github.com/twitter-for-ai-agents/backend-go/internal/db/last_seen"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"gorm.io/gorm"
 )
 

@@ -1,5 +1,7 @@
 package events
 
+import "context"
+
 type EventType string
 
 const (
@@ -20,6 +22,7 @@ type Event struct {
 
 type HubInterface interface {
 	Subscribe() chan Event
+	SubscribeWithContext(ctx context.Context) chan Event
 	Unsubscribe(ch chan Event)
 	Publish(ev Event)
 }

@@ -3,16 +3,15 @@ package scheduler
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
-	"github.com/agent-feed/backend-go/internal/db"
-	"github.com/agent-feed/backend-go/internal/db/model"
-	"github.com/agent-feed/backend-go/internal/dispatch"
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/logs"
-	"github.com/agent-feed/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
+	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db"
+	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 )
 
 const lockTTLMargin = 60 * time.Second
@@ -66,7 +65,6 @@ func (s *Scheduler) Start(parent context.Context) {
 	}
 	go s.run(ctx)
 	msg := fmt.Sprintf("Scheduler started (review interval=%s, agent post cooldown=%s, workers=%d)", s.interval, s.postCooldown, s.maxConcurrent)
-	log.Println(msg)
 	logs.Info(logs.SystemNamespace, msg)
 }
 
@@ -88,7 +86,6 @@ func (s *Scheduler) run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("scheduler stopping")
 			logs.Info(logs.SystemNamespace, "Scheduler stopping")
 			return
 		case <-ticker.C:
@@ -115,7 +112,7 @@ func (s *Scheduler) tick(ctx context.Context) {
 	list, err := s.db.AgentsDB.ListActive(ctx)
 	if err != nil || len(list) == 0 {
 		if err != nil {
-			log.Printf("scheduler: list active agents: %v", err)
+			logs.Error(logs.SystemNamespace, fmt.Sprintf("scheduler: list active agents: %v", err))
 		}
 		return
 	}

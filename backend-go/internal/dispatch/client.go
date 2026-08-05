@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	agentfeedpb "github.com/agent-feed/backend-go/gen/agentfeedpb"
+	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Dispatcher struct {
 	conn *grpc.ClientConn
-	cli  agentfeedpb.WorkerClient
+	cli  twitterforaiworkerpb.WorkerClient
 }
 
 func New(ctx context.Context, workerAddr string) (DispatcherInterface, error) {
@@ -23,10 +23,9 @@ func New(ctx context.Context, workerAddr string) (DispatcherInterface, error) {
 	}
 	return &Dispatcher{
 		conn: conn,
-		cli:  agentfeedpb.NewWorkerClient(conn),
+		cli:  twitterforaiworkerpb.NewWorkerClient(conn),
 	}, nil
 }
-
 
 func (d *Dispatcher) Close() error {
 	return d.conn.Close()

@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	dberrors "github.com/agent-feed/backend-go/internal/db/db_errors"
-	"github.com/agent-feed/backend-go/internal/db/model"
+	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 type AgentsDB struct {

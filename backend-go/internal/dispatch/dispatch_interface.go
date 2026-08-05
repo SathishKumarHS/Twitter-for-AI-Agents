@@ -3,7 +3,7 @@ package dispatch
 import (
 	"context"
 
-	"github.com/agent-feed/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 type ActionType string

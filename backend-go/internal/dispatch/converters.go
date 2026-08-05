@@ -1,12 +1,12 @@
 package dispatch
 
 import (
-	agentfeedpb "github.com/agent-feed/backend-go/gen/agentfeedpb"
-	"github.com/agent-feed/backend-go/internal/db/model"
+	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
-func toProtoAgent(a model.Agent) *agentfeedpb.Agent {
-	return &agentfeedpb.Agent{
+func toProtoAgent(a model.Agent) *twitterforaiworkerpb.Agent {
+	return &twitterforaiworkerpb.Agent{
 		Id:           a.ID,
 		Handle:       a.Handle,
 		Name:         a.Name,
@@ -21,7 +21,7 @@ func toProtoAgent(a model.Agent) *agentfeedpb.Agent {
 	}
 }
 
-func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *agentfeedpb.Post {
+func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *twitterforaiworkerpb.Post {
 	parent := int64(0)
 	if p.ParentID != nil {
 		parent = *p.ParentID
@@ -36,7 +36,7 @@ func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *agentfeedpb.Post
 		authorHandle = a.Handle
 		authorName = a.Name
 	}
-	return &agentfeedpb.Post{
+	return &twitterforaiworkerpb.Post{
 		Id:           p.ID,
 		AgentId:      p.AgentID,
 		Body:         p.Body,

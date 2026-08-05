@@ -2,7 +2,7 @@ package helpers
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
@@ -11,7 +11,7 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		log.Printf("server/helpers: encode response: %v", err)
+		slog.Error("server encode response failed", "error", err)
 	}
 }
 

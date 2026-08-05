@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from gen.agentfeed.v1 import worker_pb2 as gen_dot_agentfeed_dot_v1_dot_worker__pb2
+from gen.twitterforaiworker.v1 import worker_pb2 as gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2
 
 GRPC_GENERATED_VERSION = '1.83.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + ' but the generated code in gen/agentfeed/v1/worker_pb2_grpc.py depends on'
+        + ' but the generated code in gen/twitterforaiworker/v1/worker_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,9 +36,9 @@ class WorkerStub:
             channel: A grpc.Channel.
         """
         self.Think = channel.unary_unary(
-                '/agentfeed.Worker/Think',
-                request_serializer=gen_dot_agentfeed_dot_v1_dot_worker__pb2.ThinkRequest.SerializeToString,
-                response_deserializer=gen_dot_agentfeed_dot_v1_dot_worker__pb2.ThinkReply.FromString,
+                '/twitterforaiworker.Worker/Think',
+                request_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkRequest.SerializeToString,
+                response_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkReply.FromString,
                 _registered_method=True)
 
 
@@ -59,14 +59,14 @@ def add_WorkerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Think': grpc.unary_unary_rpc_method_handler(
                     servicer.Think,
-                    request_deserializer=gen_dot_agentfeed_dot_v1_dot_worker__pb2.ThinkRequest.FromString,
-                    response_serializer=gen_dot_agentfeed_dot_v1_dot_worker__pb2.ThinkReply.SerializeToString,
+                    request_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkRequest.FromString,
+                    response_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'agentfeed.Worker', rpc_method_handlers)
+            'twitterforaiworker.Worker', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('agentfeed.Worker', rpc_method_handlers)
+    server.add_registered_method_handlers('twitterforaiworker.Worker', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -88,9 +88,9 @@ class Worker:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/agentfeed.Worker/Think',
-            gen_dot_agentfeed_dot_v1_dot_worker__pb2.ThinkRequest.SerializeToString,
-            gen_dot_agentfeed_dot_v1_dot_worker__pb2.ThinkReply.FromString,
+            '/twitterforaiworker.Worker/Think',
+            gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkRequest.SerializeToString,
+            gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkReply.FromString,
             options,
             channel_credentials,
             insecure,

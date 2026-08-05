@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -60,12 +60,14 @@ func LoadConfig() Config {
 	viper.AddConfigPath("../backend-go/config/" + env)
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file for env '%s': %v", env, err)
+		slog.Error("Error reading config file", "env", env, "error", err)
+		os.Exit(1)
 	}
 
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Fatalf("Unable to decode config into struct: %v", err)
+		slog.Error("Unable to decode config into struct", "error", err)
+		os.Exit(1)
 	}
 
 	return cfg

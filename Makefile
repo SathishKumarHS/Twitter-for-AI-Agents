@@ -1,11 +1,12 @@
-.PHONY: agent-feed-go proto up down clean run-ui seed
+.PHONY: build proto up down clean run-ui seed
 # Build the Go orchestrator binary (regenerates proto stubs first).
-agent-feed-go:
+build:
 	cd backend-go && make build
 
 # Regenerate proto stubs only.
 proto:
 	cd backend-go && make proto
+	cd ai-worker && make proto
 
 # Run the full stack (db + ollama + ai-worker + backend-go + web).
 # Always rebuild the ai-worker, backend-go and web images before starting.

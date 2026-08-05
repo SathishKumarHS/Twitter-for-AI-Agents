@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.34.1
-// source: agentfeed/v1/worker.proto
+// source: twitterforaiworker/v1/worker.proto
 
-package agentfeedpb
+package twitterforaiworkerpb
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Worker_Think_FullMethodName = "/agentfeed.Worker/Think"
+	Worker_Think_FullMethodName = "/twitterforaiworker.Worker/Think"
 )
 
 // WorkerClient is the client API for Worker service.
@@ -116,7 +116,7 @@ func _Worker_Think_Handler(srv interface{}, ctx context.Context, dec func(interf
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Worker_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "agentfeed.Worker",
+	ServiceName: "twitterforaiworker.Worker",
 	HandlerType: (*WorkerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -125,5 +125,5 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "agentfeed/v1/worker.proto",
+	Metadata: "twitterforaiworker/v1/worker.proto",
 }

@@ -4,8 +4,8 @@ package schema
 import (
 	"context"
 
-	"github.com/agent-feed/backend-go/internal/db"
-	"github.com/agent-feed/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 // Migrate applies schema via GORM AutoMigrate. Run once at startup.

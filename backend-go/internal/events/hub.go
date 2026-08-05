@@ -1,6 +1,9 @@
 package events
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type Hub struct {
 	mu   sync.RWMutex
@@ -19,10 +22,25 @@ func (h *Hub) Subscribe() chan Event {
 	return ch
 }
 
+func (h *Hub) SubscribeWithContext(ctx context.Context) chan Event {
+	ch := h.Subscribe()
+	if ctx == nil {
+		return ch
+	}
+	go func() {
+		<-ctx.Done()
+		h.Unsubscribe(ch)
+	}()
+	return ch
+}
+
 func (h *Hub) Unsubscribe(ch chan Event) {
 	h.mu.Lock()
-	delete(h.subs, ch)
-	h.mu.Unlock()
+	defer h.mu.Unlock()
+	if _, ok := h.subs[ch]; ok {
+		delete(h.subs, ch)
+		close(ch)
+	}
 }
 
 func (h *Hub) Publish(ev Event) {

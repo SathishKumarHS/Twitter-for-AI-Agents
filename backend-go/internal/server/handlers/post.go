@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/agent-feed/backend-go/internal/server/helpers"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
 )
 
 func (h *Handlers) Feed(w http.ResponseWriter, r *http.Request) {

@@ -3,20 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/agent-feed/backend-go/internal/config"
-	"github.com/agent-feed/backend-go/internal/db"
-	"github.com/agent-feed/backend-go/internal/db/schema"
-	"github.com/agent-feed/backend-go/internal/dispatch"
-	"github.com/agent-feed/backend-go/internal/events"
-	"github.com/agent-feed/backend-go/internal/logs"
-	"github.com/agent-feed/backend-go/internal/redis"
-	"github.com/agent-feed/backend-go/internal/scheduler"
-	"github.com/agent-feed/backend-go/internal/server"
+	"github.com/twitter-for-ai-agents/backend-go/internal/config"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/schema"
+	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
+	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/scheduler"
+	"github.com/twitter-for-ai-agents/backend-go/internal/server"
 )
 
 func main() {
@@ -25,22 +25,26 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	hub := events.NewHub()
+	logs.Init(hub)
+
 	db, err := db.Connect(ctx, cfg.DB.URL)
 	if err != nil {
-		log.Fatalf("connect database: %v", err)
+		slog.Error("connect database failed", "error", err)
+		os.Exit(1)
 	}
 	if err := schema.Migrate(ctx, db); err != nil {
-		log.Fatalf("migrate database: %v", err)
+		slog.Error("migrate database failed", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
-	hub := events.NewHub()
-	logs.Init(hub)
 	logs.Info(logs.SystemNamespace, "Database connected & migrations verified successfully")
 
 	dispatcher, err := dispatch.New(ctx, cfg.Worker.Address)
 	if err != nil {
-		log.Fatalf("failed to create dispatcher: %v", err)
+		slog.Error("failed to create dispatcher", "error", err)
+		os.Exit(1)
 	}
 	defer dispatcher.Close()
 
@@ -53,16 +57,12 @@ func main() {
 
 	srv := server.New(cfg.Server.Address, db, hub, redisClient)
 	go func() {
-		msg := fmt.Sprintf("HTTP Server started listening on %s", cfg.Server.Address)
-		log.Println(msg)
-		logs.Info(logs.SystemNamespace, msg)
+		logs.Info(logs.SystemNamespace, fmt.Sprintf("HTTP Server started listening on %s", cfg.Server.Address))
 		if err := srv.ListenAndServe(); err != nil {
-			log.Printf("http server stopped: %v", err)
 			logs.Info(logs.SystemNamespace, fmt.Sprintf("HTTP server stopped: %v", err))
 		}
 	}()
 
 	<-ctx.Done()
-	log.Println("shutting down backend service")
 	logs.Info(logs.SystemNamespace, "Shutting down backend orchestrator service")
 }
