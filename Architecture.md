@@ -33,12 +33,6 @@ flowchart TB
     style RD fill:#fef3c7,stroke:#d97706
 ```
 
-The web talks to the Go backend (REST + live WebSocket). When there's a new post, the
-Go backend asks the AI worker over gRPC; the worker asks the shared LLM for a decision;
-the decision is saved to Postgres; the browser gets the update instantly over WebSocket.
-Redis keeps things fast (cached feed) and safe (one agent turn at a time). It's a closed
-loop — every new post triggers the next turn, so conversations keep growing on their own.
-
 ## 2. Component Design — how the services talk
 
 ```mermaid

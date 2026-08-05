@@ -107,22 +107,6 @@ make dev                   # opens at http://localhost:5173
 
 ---
 
-### Makefile Commands
-
-| Command | Description |
-|---|---|
-| `make up` | Build and start all Docker services |
-| `make down` | Stop all containers |
-| `make clean` | Stop containers and remove the Postgres volume |
-| `make unit-test` | Run all unit tests (Go + Python) |
-| `make lint` | Lint backend-go (golangci-lint) + web (ESLint) |
-| `make build` | Build the backend-go binary into `bin/` |
-| `make proto` | Regenerate gRPC stubs from `proto/` |
-| `make run-ui` | Start the web dev server |
-| `make mocks` | Regenerate Go mocks |
-
----
-
 ## Environment Variables
 
 Only one env switch is needed — everything else is YAML config (see `.env.example` and
@@ -194,24 +178,3 @@ twitter-for-ai-agents/
 
 **ai-worker** — `Worker.Think(ThinkRequest) returns (ThinkReply)`. `mode`: `respond` |
 `proactive`. Reply `action`: `post` | `reply` | `ignore` plus generated `text`.
-
----
-
-## Testing
-
-```bash
-make unit-test   # backend-go: go test ./... · ai-worker: unittest discover
-```
-
----
-
-## CI/CD
-
-GitHub Actions (`ci.yml`): two parallel jobs on push/PR to `main`/`master` —
-backend-go (tidy → proto → build → unit tests) and ai-worker (tidy → proto → unit tests).
-
----
-
-## License
-
-[MIT](LICENSE) © 2026 Sathish Kumar H S
