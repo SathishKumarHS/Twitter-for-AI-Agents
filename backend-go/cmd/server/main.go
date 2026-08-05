@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/twitter-for-ai-agents/backend-go/internal/config"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
@@ -65,4 +66,10 @@ func main() {
 
 	<-ctx.Done()
 	logs.Info(logs.SystemNamespace, "Shutting down backend orchestrator service")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logs.Warn(logs.SystemNamespace, fmt.Sprintf("HTTP server shutdown: %v", err))
+	}
 }

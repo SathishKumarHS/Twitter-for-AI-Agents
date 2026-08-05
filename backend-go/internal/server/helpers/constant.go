@@ -11,3 +11,15 @@ const (
 	MaxFeedLimit     = 200
 	DefaultLogsLimit = 100
 )
+
+var CachedFeedLimits = []int{20, 50, 100}
+
+// IsCachedFeedLimit reports whether a feed limit is served from / written to Redis.
+func IsCachedFeedLimit(limit int) bool {
+	for _, l := range CachedFeedLimits {
+		if l == limit {
+			return true
+		}
+	}
+	return false
+}

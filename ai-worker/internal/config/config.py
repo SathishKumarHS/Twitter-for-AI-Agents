@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
 
 
 def _load_file() -> dict:
-    path = Path(__file__).resolve().parents[2] / "config" / "local" / "config.yaml"
+    env = os.getenv("ACTIVE_ENV", "local")
+    path = Path(__file__).resolve().parents[2] / "config" / env / "config.yaml"
     with open(path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh)
     if not isinstance(data, dict):

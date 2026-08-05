@@ -16,7 +16,9 @@ func (h *Handlers) Feed(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if h.redisClient != nil {
+	cacheable := helpers.IsCachedFeedLimit(limit)
+
+	if cacheable && h.redisClient != nil {
 		if val := h.redisClient.GetFeed(r.Context(), limit); val != nil {
 			w.Header().Set(helpers.HeaderContentType, helpers.MIMEApplicationJSON)
 			w.Header().Set(helpers.HeaderXCache, helpers.CacheHit)
@@ -32,7 +34,7 @@ func (h *Handlers) Feed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.redisClient != nil {
+	if cacheable && h.redisClient != nil {
 		if b, err := json.Marshal(list); err == nil {
 			_ = h.redisClient.SetFeed(r.Context(), limit, b)
 		}

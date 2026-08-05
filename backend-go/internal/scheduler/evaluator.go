@@ -97,11 +97,16 @@ func (s *Scheduler) authorMainPost(ctx context.Context, agent model.Agent, agent
 	go s.notifySubscribers(s.rootCtx, created, agentMap)
 }
 
+const maxReviewBatch = 10
+
 func (s *Scheduler) reviewUnread(ctx context.Context, agent model.Agent, agentMap map[int64]model.Agent) {
 	newPosts, err := s.db.PostDB.NewPostsAfter(ctx, agent.ID)
 	if err != nil {
 		logs.AgentError(agent.ID, agent.Name, agent.Handle, logs.ReviewNamespace, fmt.Sprintf("Fetch new posts failed: %v", err))
 		return
+	}
+	if len(newPosts) > maxReviewBatch {
+		newPosts = newPosts[:maxReviewBatch]
 	}
 
 	seenMax := s.db.LastSeenDB.LastSeen(ctx, agent.ID)
