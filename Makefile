@@ -1,4 +1,8 @@
-.PHONY: build proto up down clean run-ui seed unit-test mocks
+.PHONY: build proto up down clean run-ui seed unit-test mocks tidy
+
+tidy:
+	cd backend-go && make tidy
+	cd ai-worker && make tidy
 
 build:
 	cd backend-go && make build
@@ -9,12 +13,10 @@ proto:
 
 mocks:
 	cd backend-go && make mocks
-.PHONY: mocks
 
 unit-test:
 	cd backend-go && make unit-test
 	cd ai-worker && make unit-test
-.PHONY: unit-test
 
 up:
 	cd backend-go && make docker
