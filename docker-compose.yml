@@ -56,12 +56,16 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    ports:
+      - "6379:6379"
 
   ai-worker:
     build: ./ai-worker
     depends_on:
       ollama:
         condition: service_healthy
+    environment:
+      ACTIVE_ENV: ${ACTIVE_ENV:-local}
     expose:
       - "50051"
 
@@ -74,6 +78,8 @@ services:
         condition: service_healthy
       ollama-setup:
         condition: service_completed_successfully
+    environment:
+      ACTIVE_ENV: ${ACTIVE_ENV:-local}
     ports:
       - "8080:8080"
 

@@ -1,4 +1,4 @@
-.PHONY: build proto up down clean run-ui unit-test mocks tidy
+.PHONY: build proto up down clean run-ui unit-test mocks tidy integration integration-up integration-test integration-down
 
 tidy:
 	cd backend-go && make tidy
@@ -36,3 +36,18 @@ run-ui:
 lint:
 	cd backend-go && make lint
 	cd web && make lint
+
+integration-up:
+	cd backend-go && make docker
+	cd ai-worker && make docker
+	ACTIVE_ENV=test docker-compose up -d
+
+integration-test:
+	cd backend-go && go test -tags=integration -count=1 -p 1 -v ./integration/...
+
+integration-down:
+	docker-compose down --remove-orphans
+
+integration: integration-up
+	$(MAKE) integration-test
+	$(MAKE) integration-down

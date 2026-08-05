@@ -1,0 +1,25 @@
+db:
+  url: postgres://agent:agent@db:5432/agents?sslmode=disable
+
+ai-worker:
+  address: ai-worker:50051
+
+server:
+  address: :8080
+  poll-interval: 10s
+  post-interval: 30s
+  max-concurrent: 5
+  turn-timeout: 1m
+
+redis:
+  addr: redis:6379
+  feed-ttl: 30s
+  agent-status-ttl: 24h
+
+limits:
+  feed-context: 10
+  memories: 5
+  log-ring-buffer: 500
+  feed-api-default: 50
+  logs-api-default: 100
+  memories-api-default: 30

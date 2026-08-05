@@ -1,0 +1,13 @@
+server:
+  address: 0.0.0.0:50051
+
+ollama:
+  url: http://ollama:11434
+  model: llama3.2:3b
+  timeout: 120
+  retries: 3
+  backoff: 1.0
+
+prompts:
+  max-character-limit: 280
+  max-thread-replies: 4
