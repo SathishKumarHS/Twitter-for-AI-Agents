@@ -1,8 +1,3 @@
-"""gRPC server exposing Worker.Think, the worker's external API surface.
-
-Mirrors backend-go/internal/httpapi: owns the network layer and the handler
-(servicer) that translates requests into domain work.
-"""
 import asyncio
 import logging
 
@@ -41,7 +36,7 @@ class WorkerServicer(worker_pb2_grpc.WorkerServicer):
                 decision["action"],
             )
             return worker_pb2.ThinkReply(action=decision["action"], text=decision["text"])
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.exception("Think failed: %s", exc)
             return worker_pb2.ThinkReply(action="ignore", text="")
 

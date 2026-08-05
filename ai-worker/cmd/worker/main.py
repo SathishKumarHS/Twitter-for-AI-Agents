@@ -1,12 +1,7 @@
-"""AI worker entrypoint.
-
-Mirrors backend-go/cmd/server/main.go: bootstraps configuration, services,
-and starts the gRPC server.
-"""
 import asyncio
 import logging
 
-from internal.grpcapi.server import serve
+from internal.server.server import serve
 
 logging.basicConfig(level=logging.INFO)
 
