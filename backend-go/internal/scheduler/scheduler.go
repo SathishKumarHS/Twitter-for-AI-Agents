@@ -39,7 +39,7 @@ func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, l
 		postCooldown:  postCooldown,
 		turnTimeout:   turnTimeout,
 		maxConcurrent: maxConcurrent,
-		queue:         make(chan turn, maxConcurrent*2),
+		queue:         make(chan turn, maxConcurrent),
 		locks:         locks,
 		db:            db,
 		dispatcher:    d,
