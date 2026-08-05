@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
-	"github.com/twitter-for-ai-agents/backend-go/internal/events"
-	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 type CreateAgentReq struct {
@@ -98,7 +98,8 @@ func (h *Handlers) AgentPosts(w http.ResponseWriter, r *http.Request) {
 	helpers.WriteJSON(w, http.StatusOK, list)
 }
 
-func (h *Handlers) PauseAgent(w http.ResponseWriter, r *http.Request) {
+// setAgentActive is a helper for pausing and resuming agents.
+func (h *Handlers) setAgentActive(w http.ResponseWriter, r *http.Request, active bool) {
 	id, err := helpers.PathID(r)
 	if err != nil {
 		helpers.WriteErr(w, http.StatusBadRequest, "invalid agent id")
@@ -109,37 +110,26 @@ func (h *Handlers) PauseAgent(w http.ResponseWriter, r *http.Request) {
 		helpers.WriteErr(w, http.StatusNotFound, "agent not found")
 		return
 	}
-	if err := h.db.AgentsDB.SetActive(r.Context(), id, false); err != nil {
+	if err := h.db.AgentsDB.SetActive(r.Context(), id, active); err != nil {
 		helpers.WriteErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	if h.redisClient != nil {
-		_ = h.redisClient.SetAgentActive(r.Context(), id, false)
+		_ = h.redisClient.SetAgentActive(r.Context(), id, active)
 	}
-	logs.Info(logs.SystemNamespace, fmt.Sprintf("Agent #%d (@%s) paused", agent.ID, agent.Handle))
-	h.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": false}})
-	helpers.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "active": false})
+	action := "paused"
+	if active {
+		action = "resumed"
+	}
+	logs.Info(logs.SystemNamespace, fmt.Sprintf("Agent #%d (@%s) %s", agent.ID, agent.Handle, action))
+	h.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": active}})
+	helpers.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "active": active})
+}
+
+func (h *Handlers) PauseAgent(w http.ResponseWriter, r *http.Request) {
+	h.setAgentActive(w, r, false)
 }
 
 func (h *Handlers) ResumeAgent(w http.ResponseWriter, r *http.Request) {
-	id, err := helpers.PathID(r)
-	if err != nil {
-		helpers.WriteErr(w, http.StatusBadRequest, "invalid agent id")
-		return
-	}
-	agent, err := h.db.AgentsDB.Get(r.Context(), id)
-	if err != nil {
-		helpers.WriteErr(w, http.StatusNotFound, "agent not found")
-		return
-	}
-	if err := h.db.AgentsDB.SetActive(r.Context(), id, true); err != nil {
-		helpers.WriteErr(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	if h.redisClient != nil {
-		_ = h.redisClient.SetAgentActive(r.Context(), id, true)
-	}
-	logs.Info(logs.SystemNamespace, fmt.Sprintf("Agent #%d (@%s) resumed", agent.ID, agent.Handle))
-	h.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": true}})
-	helpers.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "active": true})
+	h.setAgentActive(w, r, true)
 }

@@ -5,10 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
-	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 func setupTestDB(t *testing.T) AgentsInterface {

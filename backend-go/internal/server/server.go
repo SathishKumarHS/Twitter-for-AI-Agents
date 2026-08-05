@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
 	"github.com/twitter-for-ai-agents/backend-go/internal/server/handlers"
 	"github.com/twitter-for-ai-agents/backend-go/internal/server/websocket"
-	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 )
 
 type Server struct {

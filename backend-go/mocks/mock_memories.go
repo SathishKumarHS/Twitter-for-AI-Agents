@@ -13,8 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	gomock "go.uber.org/mock/gomock"
+
+	model "github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 // MockMemoriesInterface is a mock of MemoriesInterface interface.

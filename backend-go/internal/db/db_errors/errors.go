@@ -2,6 +2,7 @@ package dberrors
 
 import (
 	"errors"
+
 	"gorm.io/gorm"
 )
 

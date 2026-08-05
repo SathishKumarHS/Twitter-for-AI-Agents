@@ -13,9 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 	gomock "go.uber.org/mock/gomock"
 	grpc "google.golang.org/grpc"
+
+	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 )
 
 // MockWorkerClient is a mock of WorkerClient interface.

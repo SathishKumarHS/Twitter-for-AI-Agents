@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/agents"
 	lastseen "github.com/twitter-for-ai-agents/backend-go/internal/db/last_seen"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/memories"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/posts"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/subscriptions"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 type DB struct {

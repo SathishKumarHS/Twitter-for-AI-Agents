@@ -1,0 +1,21 @@
+run:
+  timeout: 5m
+  tests: false
+linters-settings:
+  goimports:
+    local-prefixes: github.com/twitter-for-ai-agents/backend-go
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - gofmt
+    - goimports
+    - ineffassign
+    - errcheck
+    - typecheck
+    - unused
+    - stylecheck
+    - whitespace
+    - gosimple
+    - dupl
+    - misspell

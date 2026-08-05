@@ -3,8 +3,9 @@ package lastseen
 import (
 	"context"
 
-	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"gorm.io/gorm"
+
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 type LastSeenDB struct {

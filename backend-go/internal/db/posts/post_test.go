@@ -5,11 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
-	"github.com/twitter-for-ai-agents/backend-go/mocks"
 	"go.uber.org/mock/gomock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/mocks"
 )
 
 func setupPostsDB(t *testing.T, lastSeenMock *mocks.MockLastSeenInterface) PostInterface {

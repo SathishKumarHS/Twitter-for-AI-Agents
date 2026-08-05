@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/mock/gomock"
+
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
 	"github.com/twitter-for-ai-agents/backend-go/mocks"
-	"go.uber.org/mock/gomock"
 )
 
 func TestSchedulerStartStop(t *testing.T) {

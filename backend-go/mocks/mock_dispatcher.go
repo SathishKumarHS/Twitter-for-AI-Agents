@@ -13,9 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
+	gomock "go.uber.org/mock/gomock"
+
 	model "github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	dispatch "github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
-	gomock "go.uber.org/mock/gomock"
 )
 
 // MockDispatcherInterface is a mock of DispatcherInterface interface.

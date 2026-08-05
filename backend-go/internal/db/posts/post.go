@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	lastseen "github.com/twitter-for-ai-agents/backend-go/internal/db/last_seen"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
-	"gorm.io/gorm"
 )
 
 type PostsDB struct {

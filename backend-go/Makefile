@@ -1,4 +1,4 @@
-.PHONY: tidy vet proto build mocks docker unit-test
+.PHONY: tidy vet proto build mocks docker unit-test lint
 
 tidy:
 	go mod tidy
@@ -45,3 +45,7 @@ docker:
 
 unit-test:
 	go test ./...
+
+lint:
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@$(shell go env GOPATH)/bin/golangci-lint run ./...

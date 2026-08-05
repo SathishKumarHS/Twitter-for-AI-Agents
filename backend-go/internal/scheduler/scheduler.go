@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
-	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
-	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
 	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
+	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
 )
 
 const lockTTLMargin = 60 * time.Second

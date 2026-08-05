@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
 func setupTestDB(t *testing.T) SubscriptionInterface {

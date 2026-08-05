@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 )
 
 type Dispatcher struct {
@@ -15,7 +16,7 @@ type Dispatcher struct {
 }
 
 func New(ctx context.Context, workerAddr string) (DispatcherInterface, error) {
-	conn, err := grpc.DialContext(ctx, workerAddr,
+	conn, err := grpc.NewClient(workerAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

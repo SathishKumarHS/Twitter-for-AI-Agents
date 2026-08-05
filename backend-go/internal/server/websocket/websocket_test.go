@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 	"nhooyr.io/websocket"
+
+	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 )
 
 func TestWebSocketServerBroadcast(t *testing.T) {

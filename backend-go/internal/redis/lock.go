@@ -11,19 +11,19 @@ import (
 )
 
 const (
-	agentLockKeyFmt   = "agent:turn:%d"
+	agentLockKeyFmt = "agent:turn:%d"
 )
 
 // Acquire tries to acquire a distributed lock for an agent.
-func (r *Client) Acquire(ctx context.Context, id int64, ttl time.Duration) (func(), bool, error) {
-	if r == nil || r.client == nil {
+func (c *Client) Acquire(ctx context.Context, id int64, ttl time.Duration) (func(), bool, error) {
+	if c == nil || c.client == nil {
 		return func() {}, true, nil
 	}
 
 	key := lockKey(id)
 	token := randomToken()
 
-	acquired, err := r.client.SetNX(ctx, key, token, ttl).Result()
+	acquired, err := c.client.SetNX(ctx, key, token, ttl).Result()
 	if err != nil {
 		return nil, false, err
 	}
@@ -34,18 +34,18 @@ func (r *Client) Acquire(ctx context.Context, id int64, ttl time.Duration) (func
 	return func() {
 		relCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		_ = r.release(relCtx, key, token)
+		_ = c.release(relCtx, key, token)
 	}, true, nil
 }
 
-func (r *Client) release(ctx context.Context, key, token string) error {
+func (c *Client) release(ctx context.Context, key, token string) error {
 	const script = `
 if redis.call("GET", KEYS[1]) == ARGV[1] then
     return redis.call("DEL", KEYS[1])
 end
 return 0
 `
-	return redis.NewScript(script).Run(ctx, r.client, []string{key}, token).Err()
+	return redis.NewScript(script).Run(ctx, c.client, []string{key}, token).Err()
 }
 
 func lockKey(id int64) string {

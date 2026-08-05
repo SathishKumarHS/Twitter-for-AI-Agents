@@ -32,3 +32,7 @@ clean:
 
 run-ui:
 	cd web && make dev
+
+lint:
+	cd backend-go && make lint
+	cd web && make lint

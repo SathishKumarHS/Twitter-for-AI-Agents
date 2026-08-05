@@ -6,10 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"go.uber.org/mock/gomock"
+
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"github.com/twitter-for-ai-agents/backend-go/mocks"
-	"go.uber.org/mock/gomock"
 )
 
 func TestHealthzEndpoint(t *testing.T) {

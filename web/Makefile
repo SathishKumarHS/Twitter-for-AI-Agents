@@ -1,4 +1,4 @@
-.PHONY: dev build docker
+.PHONY: dev build docker lint
 
 # Run the React dev server (proxies /api to backend-go on :8080).
 dev:
@@ -7,6 +7,9 @@ dev:
 # Typecheck + build the production static site into dist/.
 build:
 	npm run build
+
+lint:
+	npm run lint
 
 # Build the web image from the repo-root compose file.
 docker:

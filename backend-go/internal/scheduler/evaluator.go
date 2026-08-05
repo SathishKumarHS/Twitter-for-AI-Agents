@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
 	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 )

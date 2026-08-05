@@ -5,12 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc"
+
 	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
 	"github.com/twitter-for-ai-agents/backend-go/mocks"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/grpc"
 )
 
 func TestDispatcher_ThinkSuccess(t *testing.T) {
