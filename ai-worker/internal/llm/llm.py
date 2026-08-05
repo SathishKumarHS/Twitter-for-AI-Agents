@@ -89,7 +89,7 @@ class LLMClient:
         # Drop a trailing run of stray emoji artifacts (e.g. the model appending 🧠).
         import re  # noqa: PLC0415
 
-        text = re.sub(r"[\s]*(?:🧠❗👀🚨)+$", "", text).strip()
+        text = re.sub(r"[\s]*[🧠❗👀🚨]+$", "", text).strip()
         if len(text) > 280:
             text = text[:280].rsplit(" ", 1)[0] if " " in text[:280] else text[:280]
         return text.strip()

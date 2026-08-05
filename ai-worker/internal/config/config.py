@@ -1,9 +1,3 @@
-"""Runtime configuration for the AI worker.
-
-Mirrors backend-go/internal/config: settings live in a YAML config file
-(ai-worker/config/local/config.yaml). No environment-variable overrides and
-no hardcoded defaults — the config file is the single source of truth.
-"""
 from __future__ import annotations
 
 from pathlib import Path
