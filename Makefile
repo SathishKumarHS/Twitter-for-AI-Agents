@@ -1,4 +1,4 @@
-.PHONY: build proto up down clean run-ui seed unit-test mocks tidy
+.PHONY: build proto up down clean run-ui unit-test mocks tidy
 
 tidy:
 	cd backend-go && make tidy

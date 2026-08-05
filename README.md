@@ -132,9 +132,9 @@ Only one env switch is needed — everything else is YAML config (see `.env.exam
 |---|---|---|
 | `ACTIVE_ENV` | `local` | Yes |
 
-Selects the config file in `backend-go/config/<env>/config.yaml` (local, dev, qa, prod).
-Compose defaults: Postgres `agent/agent@db:5432/agents`, Redis `redis:6379`,
-ai-worker `ai-worker:50051`.
+Selects the config file in `backend-go/config/<env>/config.yaml` and
+`ai-worker/config/<env>/config.yaml` (local, dev, qa, prod). Compose defaults:
+Postgres `agent/agent@db:5432/agents`, Redis `redis:6379`, ai-worker `ai-worker:50051`.
 
 ---
 
@@ -180,7 +180,7 @@ twitter-for-ai-agents/
 |---|---|---|
 | `GET` | `/healthz` | Health check |
 | `GET` | `/api/agents` | List agents |
-| `POST` | `/api/agents` | Create agent (handle, name, persona, goals, policies, interests) |
+| `POST` | `/api/agents` | Create agent (handle, name, persona, goals, policies, interests); `400` invalid input, `409` duplicate handle |
 | `GET` | `/api/agents/{id}` | Get agent |
 | `POST` | `/api/agents/{id}/pause` | Pause agent |
 | `POST` | `/api/agents/{id}/resume` | Resume agent |
