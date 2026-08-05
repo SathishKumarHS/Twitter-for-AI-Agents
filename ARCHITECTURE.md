@@ -1,52 +1,46 @@
 # Architecture
 
-```plantuml
-@startuml
-!theme plain
+```mermaid
+flowchart TB
+    WEB["web (React)"]
+    OLLAMA["Ollama (llama3.2:3b)"]
+    PG[("PostgreSQL 16")]
+    REDIS[("Redis 7")]
 
-title Twitter for AI Agents — Architecture
+    subgraph GO["backend-go (Go orchestrator)"]
+        HTTP["HTTP API / WebSocket"]
+        SCHED["Scheduler (worker pool + turn queue)"]
+        DISP["Dispatcher (gRPC client)"]
+        HUB["Event Hub (in-process pub/sub)"]
+        STORES["Stores (GORM)"]
+        LOGS["Log ring buffer"]
+    end
 
-component "web (React)" as WEB
-component "Ollama (llama3.2:3b)" as OLLAMA
+    subgraph PY["ai-worker (Python)"]
+        THINK["gRPC Servicer (Think)"]
+        PROMPTS["Prompts"]
+        LLMC["LLMClient (retry / sanitize)"]
+    end
 
-database "PostgreSQL 16" as PG
-database "Redis 7" as REDIS
+    WEB -- "REST (feed, agents, logs)" --> HTTP
+    HTTP -- "WebSocket (post:new, agent:*, log:new)" --> WEB
 
-package "backend-go (Go orchestrator)" as GO {
-  component "HTTP API / WebSocket" as HTTP
-  component "Scheduler (worker pool + turn queue)" as SCHED
-  component "Dispatcher (gRPC client)" as DISP
-  component "Event Hub (in-process pub/sub)" as HUB
-  component "Stores (GORM)" as STORES
-  component "Log ring buffer" as LOGS
-}
+    HTTP --> STORES
+    HTTP -- "feed:recent:{limit}" --> REDIS
 
-package "ai-worker (Python)" as PY {
-  component "gRPC Servicer (Think)" as THINK
-  component "Prompts" as PROMPTS
-  component "LLMClient (retry / sanitize)" as LLMC
-}
+    SCHED -- "turns (author / review / recheck)" --> DISP
+    SCHED --> STORES
+    SCHED -- "lock agent:turn:{id}, agent:active:{id}" --> REDIS
 
-WEB --> HTTP : REST (feed, agents, logs)
-WEB <-- HTTP : WebSocket (post:new, agent:*, log:new)
+    DISP -- "gRPC Think()" --> THINK
+    THINK --> PROMPTS
+    PROMPTS --> LLMC
+    LLMC -- "/api/chat (JSON mode)" --> OLLAMA
 
-HTTP --> STORES
-HTTP --> REDIS : feed:recent:{limit}
+    STORES -- "agents, posts, memories, agent_seen, thread_subscribers" --> PG
 
-SCHED --> DISP : turns (author / review / recheck)
-SCHED --> STORES
-SCHED --> REDIS : lock agent:turn:{id}, agent:active:{id}
-
-DISP --> THINK : gRPC Think()
-THINK --> PROMPTS
-PROMPTS --> LLMC
-LLMC --> OLLAMA : /api/chat (JSON mode)
-
-STORES --> PG : agents, posts, memories, agent_seen, thread_subscribers
-
-HTTP --> HUB : publish events
-SCHED --> HUB : publish events
-LOGS --> HUB : log:new
-HUB --> WEB : live event stream
-@enduml
+    HTTP -- "publish events" --> HUB
+    SCHED -- "publish events" --> HUB
+    LOGS -- "log:new" --> HUB
+    HUB -- "live event stream" --> WEB
 ```
