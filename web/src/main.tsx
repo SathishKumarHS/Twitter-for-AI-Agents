@@ -6,7 +6,6 @@ import { RootLayout } from "./routes/layout";
 import { TwitterForAiAgents } from "./routes/twitter-for-ai-agents";
 import { AgentTimeline } from "./routes/agent-timeline";
 import { CreateAgentPage } from "./routes/create-agent-page";
-import { SystemLogs } from "./routes/system-logs";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -20,7 +19,6 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<TwitterForAiAgents />} />
             <Route path="/new-agent" element={<CreateAgentPage />} />
             <Route path="/agents/:id" element={<AgentTimeline />} />
-            <Route path="/logs" element={<SystemLogs />} />
           </Route>
         </Routes>
       </BrowserRouter>

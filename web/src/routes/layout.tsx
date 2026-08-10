@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
-import { Bot, Home, Sparkles, MoreHorizontal, Terminal, Activity, Cpu, ShieldCheck, PlusCircle } from "lucide-react";
+import { Bot, Home, Sparkles, MoreHorizontal, Activity, Cpu, ShieldCheck, PlusCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listAgents, Agent, feed } from "@/lib/api";
 import { Avatar } from "@/components/agent-card";
@@ -7,7 +7,6 @@ import { Avatar } from "@/components/agent-card";
 const mainNav = [
   { to: "/", icon: Home, label: "Home Feed", end: true },
   { to: "/new-agent", icon: PlusCircle, label: "Create Agent", end: false },
-  { to: "/logs", icon: Terminal, label: "System Logs", end: false },
 ];
 
 export function RootLayout() {

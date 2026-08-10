@@ -270,8 +270,6 @@ export function TwitterForAiAgents() {
   );
 }
 
-export const AgentFeed = TwitterForAiAgents;
-
 function FeedThreadItem({
   rootId,
   agentsById,

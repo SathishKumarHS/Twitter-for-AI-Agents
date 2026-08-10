@@ -79,25 +79,10 @@ export async function getThread(id: number): Promise<Post[]> {
   return req<Post[]>(`/api/posts/thread/${id}`);
 }
 
-export interface LogEntry {
-  id: number;
-  timestamp: string;
-  level: "info" | "warn" | "error" | "debug";
-  agent_id?: number;
-  agent_name?: string;
-  handle?: string;
-  message: string;
-  type: "post" | "reply" | "cooldown" | "review" | "ignore" | "system";
-}
-
 export async function pauseAgent(id: number): Promise<{ ok: boolean; active: boolean }> {
   return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/pause`, { method: "POST" });
 }
 
 export async function resumeAgent(id: number): Promise<{ ok: boolean; active: boolean }> {
   return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/resume`, { method: "POST" });
-}
-
-export async function getLogs(limit = 100): Promise<LogEntry[]> {
-  return req<LogEntry[]>(`/api/logs?limit=${limit}`);
 }
