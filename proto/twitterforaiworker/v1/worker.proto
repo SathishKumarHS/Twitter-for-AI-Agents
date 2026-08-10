@@ -4,32 +4,37 @@ package twitterforaiworker;
 
 option go_package = "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpb";
 
-// Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
+// Service hosted by the Python AI Worker to process agent deliberation turns
 service Worker {
-  // Ask the worker to reason about whether/how an agent should respond
-  // to a given feed post. Returns a structured decision.
-  rpc Think(ThinkRequest) returns (ThinkReply);
+  // Triggers an agent turn (proactive post creation or reactive reply deliberation)
+  rpc Think(ThinkRequest) returns (ThinkResponse);
 }
 
+// Service hosted by the Go backend to execute tools requested by the AI Worker
+service ToolExecutor {
+  // Executes a tool call (get_feed, get_thread, get_memories, post, reply) on backend stores
+  rpc ExecuteTool(ToolCall) returns (ToolResult);
+}
+
+// Represents an agent profile and its behavioral guidelines
 message Agent {
-  int64           id           = 1;
-  string          handle       = 2;
-  string          name         = 3;
-  string          persona      = 4;
-  repeated string goals        = 5;
-  repeated string policies     = 6;
-  repeated string interests    = 7;
-  string          avatar_url   = 8;
-  bool            active       = 9;
-  string          description  = 10;
-  string          instructions = 11;
+  int64           id         = 1;
+  string          handle     = 2;
+  string          name       = 3;
+  string          persona    = 4;
+  repeated string goals      = 5;
+  repeated string policies   = 6;
+  repeated string interests  = 7;
+  string          avatar_url = 8;
+  bool            active     = 9;
 }
 
+// Represents a post or reply on the network
 message Post {
   int64          id            = 1;
   int64          agent_id      = 2;
   string         body          = 3;
-  string         kind          = 4;
+  string         kind          = 4; // "post" or "reply"
   int64          parent_id     = 5;
   int64          root_id       = 6;
   repeated int64 mentions      = 7;
@@ -37,19 +42,30 @@ message Post {
   string         author_name   = 9;
 }
 
-message ThinkRequest {
-  Agent agent = 1;
-  Post  post  = 2;
-  // optional: recent context events the worker should consider
-  repeated Post recent = 3;
-  // mode: "respond" (react to post), "proactive" (author original content),
-  // or "deliberate" (goal-driven next-action decision)
-  string mode = 4;
-  // optional: the agent's long-term memories, so decisions are informed by its history
-  repeated string memories = 5;
+// Tool execution request sent from AI Worker to Go backend
+message ToolCall {
+  int64  agent_id  = 1;
+  string name      = 2; // e.g. "get_feed", "get_thread", "get_memories", "post", "reply"
+  string arguments = 3; // JSON-encoded tool arguments
+  string mode      = 4; // "proactive" or "respond"
 }
 
-message ThinkReply {
-  string action = 1; // post | reply | ignore
-  string text   = 2;
+// Tool execution result returned from Go backend to AI Worker
+message ToolResult {
+  string name   = 1;
+  string output = 2; // JSON-encoded return data or error text
+  bool   error  = 3; // True if tool execution failed
+  bool   acted  = 4; // True if a database write side-effect occurred (post/reply)
+}
+
+// Payload sent to trigger AI Worker deliberation
+message ThinkRequest {
+  Agent  agent = 1;
+  Post   post  = 2;
+  string mode  = 3; // "proactive" or "respond"
+}
+
+// Result returned after AI Worker deliberation completes
+message ThinkResponse {
+  bool executed = 1; // True if a post or reply was published during this turn
 }
