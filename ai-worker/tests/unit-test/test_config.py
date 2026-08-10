@@ -22,7 +22,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.ollama_retries(), 3)
         self.assertEqual(config.ollama_backoff(), 1.0)
         self.assertEqual(config.max_character_limit(), 280)
-        self.assertEqual(config.max_thread_replies(), 4)
+        self.assertEqual(config.max_thread_replies(), 10)
 
     def test_require_missing_key_raises_runtime_error(self) -> None:
         """Verify that requiring a non-existent key raises RuntimeError."""

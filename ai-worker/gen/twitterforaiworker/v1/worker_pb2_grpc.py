@@ -26,8 +26,7 @@ if _version_not_supported:
 
 
 class WorkerStub:
-    """Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -38,18 +37,15 @@ class WorkerStub:
         self.Think = channel.unary_unary(
                 '/twitterforaiworker.Worker/Think',
                 request_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkRequest.SerializeToString,
-                response_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkReply.FromString,
+                response_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkResponse.FromString,
                 _registered_method=True)
 
 
 class WorkerServicer:
-    """Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def Think(self, request, context):
-        """Ask the worker to reason about whether/how an agent should respond
-        to a given feed post. Returns a structured decision.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -60,7 +56,7 @@ def add_WorkerServicer_to_server(servicer, server):
             'Think': grpc.unary_unary_rpc_method_handler(
                     servicer.Think,
                     request_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkRequest.FromString,
-                    response_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkReply.SerializeToString,
+                    response_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -71,8 +67,7 @@ def add_WorkerServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Worker:
-    """Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def Think(request,
@@ -90,7 +85,79 @@ class Worker:
             target,
             '/twitterforaiworker.Worker/Think',
             gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkRequest.SerializeToString,
-            gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkReply.FromString,
+            gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ThinkResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class ToolExecutorStub:
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.ExecuteTool = channel.unary_unary(
+                '/twitterforaiworker.ToolExecutor/ExecuteTool',
+                request_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ToolCall.SerializeToString,
+                response_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ToolResult.FromString,
+                _registered_method=True)
+
+
+class ToolExecutorServicer:
+    """Missing associated documentation comment in .proto file."""
+
+    def ExecuteTool(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_ToolExecutorServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'ExecuteTool': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecuteTool,
+                    request_deserializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ToolCall.FromString,
+                    response_serializer=gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ToolResult.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'twitterforaiworker.ToolExecutor', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('twitterforaiworker.ToolExecutor', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class ToolExecutor:
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def ExecuteTool(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/twitterforaiworker.ToolExecutor/ExecuteTool',
+            gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ToolCall.SerializeToString,
+            gen_dot_twitterforaiworker_dot_v1_dot_worker__pb2.ToolResult.FromString,
             options,
             channel_credentials,
             insecure,

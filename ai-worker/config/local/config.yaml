@@ -1,6 +1,12 @@
+# AI Worker gRPC server configuration
 server:
   address: 0.0.0.0:50051
 
+# Go backend tool-execution gRPC address
+backend:
+  tool-address: backend-go:50052
+
+# Ollama LLM endpoint, model, timeout, and retry backoff settings
 ollama:
   url: http://ollama:11434
   model: llama3.2:3b
@@ -8,6 +14,10 @@ ollama:
   retries: 3
   backoff: 1.0
 
+# Prompt limits, character limits, and tool budget rules
 prompts:
   max-character-limit: 280
-  max-thread-replies: 4
+  max-thread-replies: 10
+  max-tool-calls-per-turn: 5
+  feed-default-limit: 10
+  feed-max-limit: 20

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&gen/twitterforaiworker/v1/worker.proto\x12\x12twitterforaiworker\"\xc5\x01\n\x05\x41gent\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0e\n\x06handle\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0f\n\x07persona\x18\x04 \x01(\t\x12\r\n\x05goals\x18\x05 \x03(\t\x12\x10\n\x08policies\x18\x06 \x03(\t\x12\x11\n\tinterests\x18\x07 \x03(\t\x12\x12\n\navatar_url\x18\x08 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\t \x01(\x08\x12\x13\n\x0b\x64\x65scription\x18\n \x01(\t\x12\x14\n\x0cinstructions\x18\x0b \x01(\t\"\xa2\x01\n\x04Post\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x10\n\x08\x61gent_id\x18\x02 \x01(\x03\x12\x0c\n\x04\x62ody\x18\x03 \x01(\t\x12\x0c\n\x04kind\x18\x04 \x01(\t\x12\x11\n\tparent_id\x18\x05 \x01(\x03\x12\x0f\n\x07root_id\x18\x06 \x01(\x03\x12\x10\n\x08mentions\x18\x07 \x03(\x03\x12\x15\n\rauthor_handle\x18\x08 \x01(\t\x12\x13\n\x0b\x61uthor_name\x18\t \x01(\t\"\xaa\x01\n\x0cThinkRequest\x12(\n\x05\x61gent\x18\x01 \x01(\x0b\x32\x19.twitterforaiworker.Agent\x12&\n\x04post\x18\x02 \x01(\x0b\x32\x18.twitterforaiworker.Post\x12(\n\x06recent\x18\x03 \x03(\x0b\x32\x18.twitterforaiworker.Post\x12\x0c\n\x04mode\x18\x04 \x01(\t\x12\x10\n\x08memories\x18\x05 \x03(\t\"*\n\nThinkReply\x12\x0e\n\x06\x61\x63tion\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t2S\n\x06Worker\x12I\n\x05Think\x12 .twitterforaiworker.ThinkRequest\x1a\x1e.twitterforaiworker.ThinkReplyB[ZYgithub.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&gen/twitterforaiworker/v1/worker.proto\x12\x12twitterforaiworker\"\x9a\x01\n\x05\x41gent\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0e\n\x06handle\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0f\n\x07persona\x18\x04 \x01(\t\x12\r\n\x05goals\x18\x05 \x03(\t\x12\x10\n\x08policies\x18\x06 \x03(\t\x12\x11\n\tinterests\x18\x07 \x03(\t\x12\x12\n\navatar_url\x18\x08 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\t \x01(\x08\"\xa2\x01\n\x04Post\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x10\n\x08\x61gent_id\x18\x02 \x01(\x03\x12\x0c\n\x04\x62ody\x18\x03 \x01(\t\x12\x0c\n\x04kind\x18\x04 \x01(\t\x12\x11\n\tparent_id\x18\x05 \x01(\x03\x12\x0f\n\x07root_id\x18\x06 \x01(\x03\x12\x10\n\x08mentions\x18\x07 \x03(\x03\x12\x15\n\rauthor_handle\x18\x08 \x01(\t\x12\x13\n\x0b\x61uthor_name\x18\t \x01(\t\"K\n\x08ToolCall\x12\x10\n\x08\x61gent_id\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\targuments\x18\x03 \x01(\t\x12\x0c\n\x04mode\x18\x04 \x01(\t\"H\n\nToolResult\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06output\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\x08\x12\r\n\x05\x61\x63ted\x18\x04 \x01(\x08\"n\n\x0cThinkRequest\x12(\n\x05\x61gent\x18\x01 \x01(\x0b\x32\x19.twitterforaiworker.Agent\x12&\n\x04post\x18\x02 \x01(\x0b\x32\x18.twitterforaiworker.Post\x12\x0c\n\x04mode\x18\x03 \x01(\t\"!\n\rThinkResponse\x12\x10\n\x08\x65xecuted\x18\x01 \x01(\x08\x32V\n\x06Worker\x12L\n\x05Think\x12 .twitterforaiworker.ThinkRequest\x1a!.twitterforaiworker.ThinkResponse2[\n\x0cToolExecutor\x12K\n\x0b\x45xecuteTool\x12\x1c.twitterforaiworker.ToolCall\x1a\x1e.twitterforaiworker.ToolResultB[ZYgithub.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,13 +33,19 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZYgithub.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpb'
   _globals['_AGENT']._serialized_start=63
-  _globals['_AGENT']._serialized_end=260
-  _globals['_POST']._serialized_start=263
-  _globals['_POST']._serialized_end=425
-  _globals['_THINKREQUEST']._serialized_start=428
-  _globals['_THINKREQUEST']._serialized_end=598
-  _globals['_THINKREPLY']._serialized_start=600
-  _globals['_THINKREPLY']._serialized_end=642
-  _globals['_WORKER']._serialized_start=644
-  _globals['_WORKER']._serialized_end=727
+  _globals['_AGENT']._serialized_end=217
+  _globals['_POST']._serialized_start=220
+  _globals['_POST']._serialized_end=382
+  _globals['_TOOLCALL']._serialized_start=384
+  _globals['_TOOLCALL']._serialized_end=459
+  _globals['_TOOLRESULT']._serialized_start=461
+  _globals['_TOOLRESULT']._serialized_end=533
+  _globals['_THINKREQUEST']._serialized_start=535
+  _globals['_THINKREQUEST']._serialized_end=645
+  _globals['_THINKRESPONSE']._serialized_start=647
+  _globals['_THINKRESPONSE']._serialized_end=680
+  _globals['_WORKER']._serialized_start=682
+  _globals['_WORKER']._serialized_end=768
+  _globals['_TOOLEXECUTOR']._serialized_start=770
+  _globals['_TOOLEXECUTOR']._serialized_end=861
 # @@protoc_insertion_point(module_scope)
