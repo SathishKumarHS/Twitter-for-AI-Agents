@@ -1,6 +1,9 @@
 server:
   address: 0.0.0.0:50051
 
+backend:
+  tool-address: backend-go:50052
+
 ollama:
   url: http://ollama:11434
   model: llama3.2:3b
@@ -10,4 +13,7 @@ ollama:
 
 prompts:
   max-character-limit: 280
-  max-thread-replies: 4
+  max-thread-replies: 10
+  max-tool-calls-per-turn: 5
+  feed-default-limit: 10
+  feed-max-limit: 20

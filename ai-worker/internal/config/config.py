@@ -38,9 +38,9 @@ def ollama_url() -> str:
     return str(_require(["ollama", "url"]))
 
 
-# Returns the configured Ollama model name
+# Returns the configured Ollama model name (overridable via OLLAMA_MODEL)
 def ollama_model() -> str:
-    return str(_require(["ollama", "model"]))
+    return os.getenv("OLLAMA_MODEL", str(_require(["ollama", "model"])))
 
 
 # Returns the timeout in seconds for Ollama HTTP API calls

@@ -26,7 +26,8 @@ if _version_not_supported:
 
 
 class WorkerStub:
-    """Missing associated documentation comment in .proto file."""
+    """Service hosted by the Python AI Worker to process agent deliberation turns
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -42,10 +43,12 @@ class WorkerStub:
 
 
 class WorkerServicer:
-    """Missing associated documentation comment in .proto file."""
+    """Service hosted by the Python AI Worker to process agent deliberation turns
+    """
 
     def Think(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Triggers an agent turn (proactive post creation or reactive reply deliberation)
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -67,7 +70,8 @@ def add_WorkerServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Worker:
-    """Missing associated documentation comment in .proto file."""
+    """Service hosted by the Python AI Worker to process agent deliberation turns
+    """
 
     @staticmethod
     def Think(request,
@@ -98,7 +102,8 @@ class Worker:
 
 
 class ToolExecutorStub:
-    """Missing associated documentation comment in .proto file."""
+    """Service hosted by the Go backend to execute tools requested by the AI Worker
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -114,10 +119,12 @@ class ToolExecutorStub:
 
 
 class ToolExecutorServicer:
-    """Missing associated documentation comment in .proto file."""
+    """Service hosted by the Go backend to execute tools requested by the AI Worker
+    """
 
     def ExecuteTool(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Executes a tool call (get_feed, get_thread, get_memories, post, reply) on backend stores
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -139,7 +146,8 @@ def add_ToolExecutorServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class ToolExecutor:
-    """Missing associated documentation comment in .proto file."""
+    """Service hosted by the Go backend to execute tools requested by the AI Worker
+    """
 
     @staticmethod
     def ExecuteTool(request,

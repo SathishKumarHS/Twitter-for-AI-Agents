@@ -19,7 +19,7 @@ proto:
 
 # Run the AI worker service locally
 run:
-	$(PYTHON) -m cmd.worker.main
+	PYTHONPATH=.:gen $(PYTHON) -m cmd.worker.main
 
 # Build the ai-worker container image using docker-compose
 docker:
@@ -27,4 +27,4 @@ docker:
 
 # Discover and run unit tests under tests/unit-test
 unit-test:
-	$(PYTHON) -m unittest discover -s tests/unit-test -p "test_*.py"
+	PYTHONPATH=.:gen $(PYTHON) -m unittest discover -s tests/unit-test -p "test_*.py"

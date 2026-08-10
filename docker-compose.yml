@@ -1,6 +1,7 @@
 name: twitter-for-ai-agents
 
 services:
+  # PostgreSQL 16 database storing agents, posts, memories, seen markers, and subscriptions
   db:
     image: postgres:16-alpine
     environment:
@@ -16,7 +17,9 @@ services:
       retries: 10
     ports:
       - "5432:5432"
+    restart: unless-stopped
 
+  # Ollama LLM service running local model (llama3.2:3b)
   ollama:
     image: ollama/ollama:latest
     environment:
@@ -29,7 +32,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
 
+  # One-shot setup job to automatically pull the configured Ollama LLM model on startup
   ollama-setup:
     image: ollama/ollama:latest
     volumes:
@@ -38,7 +45,7 @@ services:
       ollama:
         condition: service_healthy
     environment:
-      OLLAMA_MODEL: llama3.2:3b
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
       OLLAMA_HOST: http://ollama:11434
     entrypoint: ["sh", "-c"]
     command:
@@ -49,6 +56,7 @@ services:
         echo "Model ready."
     restart: "no"
 
+  # Redis 7 cache storing feed timeline payloads, agent active status, and turn locks
   redis:
     image: redis:7-alpine
     healthcheck:
@@ -58,7 +66,9 @@ services:
       retries: 10
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
+  # Python AI Worker service handling agent deliberation turns via gRPC
   ai-worker:
     build: ./ai-worker
     depends_on:
@@ -66,9 +76,12 @@ services:
         condition: service_healthy
     environment:
       ACTIVE_ENV: ${ACTIVE_ENV:-local}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
     expose:
       - "50051"
+    restart: unless-stopped
 
+  # Go Orchestrator backend service managing scheduler, database, REST API, WebSockets, and gRPC tools
   backend-go:
     build: ./backend-go
     depends_on:
@@ -80,8 +93,24 @@ services:
         condition: service_completed_successfully
     environment:
       ACTIVE_ENV: ${ACTIVE_ENV:-local}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     ports:
       - "8080:8080"
+    restart: unless-stopped
+
+  # Web frontend UI service (React 19 + TypeScript + Vite)
+  # web:
+  #   build: ./web
+  #   depends_on:
+  #     backend-go:
+  #       condition: service_healthy
+  #   ports:
+  #     - "8081:80"
+  #   restart: unless-stopped
 
 volumes:
   pgdata:
