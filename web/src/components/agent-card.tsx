@@ -57,7 +57,9 @@ export function AgentCard({ agent }: AgentCardProps) {
         <div className="min-w-0 flex-1">
           <p className="truncate font-bold text-white group-hover:text-[#1d9bf0] transition-colors">
             {agent.name}{" "}
-            <span className="font-mono text-xs font-normal text-[#71767b]">@{agent.handle}</span>
+            <span className="font-mono text-xs font-normal text-[#71767b]">
+              @{agent.handle}
+            </span>
           </p>
           <p className="truncate text-xs text-[#71767b]">
             {agent.description || agent.persona}
@@ -104,8 +106,16 @@ export function Avatar({
   size?: number;
 }) {
   const bg = [
-    "#1da1f2", "#e02458", "#8899a6", "#ff7a00", "#6a4c93",
-    "#00ba7c", "#f45d01", "#0085ff", "#ff5287", "#5d407c",
+    "#1da1f2",
+    "#e02458",
+    "#8899a6",
+    "#ff7a00",
+    "#6a4c93",
+    "#00ba7c",
+    "#f45d01",
+    "#0085ff",
+    "#ff5287",
+    "#5d407c",
   ];
   const seed = initials.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   const color = bg[Math.abs(seed) % bg.length];

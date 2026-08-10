@@ -68,7 +68,9 @@ function ReplyNode({
   const parentPost =
     rootPost.id === (post.parent_id ?? post.root_id)
       ? rootPost
-      : rootPost.comments?.find((p) => p.id === (post.parent_id ?? post.root_id));
+      : rootPost.comments?.find(
+          (p) => p.id === (post.parent_id ?? post.root_id),
+        );
   const replyingToHandle = parentPost
     ? handleOf(parentPost.agent_id, agentsById)
     : handleOf(rootPost.agent_id, agentsById);
@@ -115,7 +117,10 @@ function PostRow({
   isMain: boolean;
   replyingTo?: string;
 }) {
-  const agent = agentsById.get(post.agent_id) || agentsById.get(Number(post.agent_id)) || agentsById.get(String(post.agent_id));
+  const agent =
+    agentsById.get(post.agent_id) ||
+    agentsById.get(Number(post.agent_id)) ||
+    agentsById.get(String(post.agent_id));
   const name = agent?.name || `Agent #${post.agent_id}`;
   const handle = agent?.handle || `agent${post.agent_id}`;
   const isOwn = agent?.id === ownAgentId;
@@ -123,7 +128,9 @@ function PostRow({
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(Math.floor((post.id * 7) % 43));
   const [retweeted, setRetweeted] = useState(false);
-  const [retweetCount, setRetweetCount] = useState(Math.floor((post.id * 3) % 19));
+  const [retweetCount, setRetweetCount] = useState(
+    Math.floor((post.id * 3) % 19),
+  );
   const [copied, setCopied] = useState(false);
   const [showInsight, setShowInsight] = useState(false);
 
@@ -174,7 +181,10 @@ function PostRow({
           <div className="mb-1 flex items-center gap-1 text-xs text-[#8e9b9b]">
             <CornerDownRight size={13} className="text-[#1d9bf0]" />
             <span>
-              Replying to <span className="font-semibold text-[#1d9bf0]">@{replyingTo}</span>
+              Replying to{" "}
+              <span className="font-semibold text-[#1d9bf0]">
+                @{replyingTo}
+              </span>
             </span>
           </div>
         )}
@@ -182,15 +192,23 @@ function PostRow({
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           <Link
             to={`/agents/${post.agent_id}`}
-            className={"truncate font-bold hover:underline " + (isOwn ? "text-[#1d9bf0]" : "text-white")}
+            className={
+              "truncate font-bold hover:underline " +
+              (isOwn ? "text-[#1d9bf0]" : "text-white")
+            }
           >
             {name}
           </Link>
-          <Link to={`/agents/${post.agent_id}`} className="truncate text-xs font-mono text-[#71767b] hover:text-[#1d9bf0]">
+          <Link
+            to={`/agents/${post.agent_id}`}
+            className="truncate text-xs font-mono text-[#71767b] hover:text-[#1d9bf0]"
+          >
             @{handle}
           </Link>
           <span className="text-[#71767b]">·</span>
-          <span className="text-xs text-[#71767b] font-mono">{timeAgo(post.created_at)}</span>
+          <span className="text-xs text-[#71767b] font-mono">
+            {timeAgo(post.created_at)}
+          </span>
 
           {isMain && (
             <span className="ml-auto rounded-full bg-[#1d9bf0]/10 border border-[#1d9bf0]/30 px-2.5 py-0.5 text-xs font-semibold text-[#1d9bf0]">
@@ -206,7 +224,10 @@ function PostRow({
         {/* Interactive Social Buttons Bar */}
         <div className="mt-3 flex items-center justify-between text-xs text-[#71767b] border-t border-[#2f3336]/40 pt-2.5 max-w-md">
           {/* Reply Action */}
-          <div className="flex items-center gap-1.5 transition-colors hover:text-[#1d9bf0] cursor-pointer" title="Replies">
+          <div
+            className="flex items-center gap-1.5 transition-colors hover:text-[#1d9bf0] cursor-pointer"
+            title="Replies"
+          >
             <MessageCircle size={15} />
             <span className="font-mono">{post.comments?.length || 0}</span>
           </div>
@@ -269,7 +290,13 @@ function PostRow({
               <span>ID: #{post.id}</span>
             </div>
             <p className="text-[#8e9b9b]">
-              Evaluated by <strong className="text-white">@{handle}</strong> persona model <code className="text-[#1d9bf0]">llama3.2:3b</code>. Decision: <span className="text-[#00ba7c] uppercase font-bold">{post.kind}</span>.
+              Evaluated by <strong className="text-white">@{handle}</strong>{" "}
+              persona model <code className="text-[#1d9bf0]">llama3.2:3b</code>.
+              Decision:{" "}
+              <span className="text-[#00ba7c] uppercase font-bold">
+                {post.kind}
+              </span>
+              .
             </p>
           </div>
         )}
@@ -278,8 +305,14 @@ function PostRow({
   );
 }
 
-function handleOf(agentId: number, agentsById: Map<number | string, Agent>): string {
-  const agent = agentsById.get(agentId) || agentsById.get(Number(agentId)) || agentsById.get(String(agentId));
+function handleOf(
+  agentId: number,
+  agentsById: Map<number | string, Agent>,
+): string {
+  const agent =
+    agentsById.get(agentId) ||
+    agentsById.get(Number(agentId)) ||
+    agentsById.get(String(agentId));
   return agent?.handle || `agent${agentId}`;
 }
 

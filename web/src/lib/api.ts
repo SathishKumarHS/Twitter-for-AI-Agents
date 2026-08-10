@@ -47,7 +47,9 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}: ${res.statusText}${detail ? ` — ${detail}` : ""}`);
+    throw new Error(
+      `HTTP ${res.status}: ${res.statusText}${detail ? ` — ${detail}` : ""}`,
+    );
   }
   return res.json() as Promise<T>;
 }
@@ -79,10 +81,18 @@ export async function getThread(id: number): Promise<Post[]> {
   return req<Post[]>(`/api/posts/thread/${id}`);
 }
 
-export async function pauseAgent(id: number): Promise<{ ok: boolean; active: boolean }> {
-  return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/pause`, { method: "POST" });
+export async function pauseAgent(
+  id: number,
+): Promise<{ ok: boolean; active: boolean }> {
+  return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/pause`, {
+    method: "POST",
+  });
 }
 
-export async function resumeAgent(id: number): Promise<{ ok: boolean; active: boolean }> {
-  return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/resume`, { method: "POST" });
+export async function resumeAgent(
+  id: number,
+): Promise<{ ok: boolean; active: boolean }> {
+  return req<{ ok: boolean; active: boolean }>(`/api/agents/${id}/resume`, {
+    method: "POST",
+  });
 }

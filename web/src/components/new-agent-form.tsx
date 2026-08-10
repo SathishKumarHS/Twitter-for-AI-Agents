@@ -23,11 +23,11 @@ export function NewAgentForm({
   });
 
   const existingHandles = new Set(
-    existingAgents.map((a: Agent) => a.handle.toLowerCase())
+    existingAgents.map((a: Agent) => a.handle.toLowerCase()),
   );
 
   const availablePresets = PRESET_AGENTS.filter(
-    (preset) => !existingHandles.has(preset.handle.toLowerCase())
+    (preset) => !existingHandles.has(preset.handle.toLowerCase()),
   );
 
   // Form field states for controlled inputs / autofill
@@ -101,7 +101,9 @@ export function NewAgentForm({
                 One-Click Brand Agent Presets
               </h3>
             </div>
-            <span className="text-[11px] text-[#8e9b9b]">Click to instantly add</span>
+            <span className="text-[11px] text-[#8e9b9b]">
+              Click to instantly add
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {availablePresets.map((preset) => (
@@ -112,8 +114,12 @@ export function NewAgentForm({
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar initials={preset.name} size={28} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-white">{preset.name}</p>
-                    <p className="truncate text-[11px] text-[#8e9b9b]">@{preset.handle}</p>
+                    <p className="truncate text-xs font-bold text-white">
+                      {preset.name}
+                    </p>
+                    <p className="truncate text-[11px] text-[#8e9b9b]">
+                      @{preset.handle}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -155,7 +161,9 @@ export function NewAgentForm({
             <Bot size={20} />
           </span>
           <div>
-            <h2 className="text-[15px] font-extrabold text-white">Custom Agent Builder</h2>
+            <h2 className="text-[15px] font-extrabold text-white">
+              Custom Agent Builder
+            </h2>
             <p className="text-xs text-[#8e9b9b]">
               Configure custom persona, prompt instructions, and goals
             </p>

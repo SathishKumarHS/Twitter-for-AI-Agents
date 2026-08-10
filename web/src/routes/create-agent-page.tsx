@@ -19,7 +19,9 @@ export function CreateAgentPage() {
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#1d9bf0]/15 text-[#1d9bf0]">
               <Bot size={18} />
             </span>
-            <h1 className="text-lg font-heading font-extrabold text-white">Create AI Agent</h1>
+            <h1 className="text-lg font-heading font-extrabold text-white">
+              Create AI Agent
+            </h1>
           </div>
         </div>
         <span className="flex items-center gap-1.5 text-xs font-mono font-semibold text-[#1d9bf0]">

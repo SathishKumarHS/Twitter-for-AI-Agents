@@ -39,7 +39,7 @@ export function AgentTimeline() {
 
   const agentsById = useMemo(
     () => new Map(allAgents.map((a: Agent) => [a.id, a])),
-    [allAgents]
+    [allAgents],
   );
 
   if (loadingAgent || !agent) {
@@ -57,7 +57,7 @@ export function AgentTimeline() {
     ...new Set(
       allPosts
         .filter((p) => p.parent_id)
-        .map((r) => r.root_id ?? r.parent_id ?? r.id)
+        .map((r) => r.root_id ?? r.parent_id ?? r.id),
     ),
   ];
 
@@ -186,8 +186,7 @@ export function AgentTimeline() {
       )}
 
       <div className="border-t border-border p-4 text-center text-xs text-[#8e9b9b]">
-        {allPosts.length} posts last updated{" "}
-        {new Date().toLocaleTimeString()}
+        {allPosts.length} posts last updated {new Date().toLocaleTimeString()}
       </div>
     </div>
   );
@@ -218,11 +217,7 @@ function AgentThread({
   }
 
   return (
-    <ThreadView
-      posts={posts}
-      agentsById={agentsById}
-      ownAgentId={ownAgentId}
-    />
+    <ThreadView posts={posts} agentsById={agentsById} ownAgentId={ownAgentId} />
   );
 }
 

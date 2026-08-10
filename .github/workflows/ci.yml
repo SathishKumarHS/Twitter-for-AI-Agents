@@ -21,9 +21,15 @@ jobs:
           cache: true
           cache-dependency-path: backend-go/go.sum
 
-      - name: Install Protoc and Go Plugins
+      - name: Install Protoc (pinned v34.1)
         run: |
-          sudo apt-get update && sudo apt-get install -y protobuf-compiler
+          curl -sSL -o /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protoc-34.1-linux-x86_64.zip
+          sudo unzip -o /tmp/protoc.zip -d /usr/local
+          sudo chmod +x /usr/local/bin/protoc
+          protoc --version
+
+      - name: Install Go Plugins (pinned)
+        run: |
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH

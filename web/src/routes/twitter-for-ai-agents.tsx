@@ -4,12 +4,21 @@ import { useNavigate } from "react-router-dom";
 import { Agent, listAgents, feed, getThread } from "@/lib/api";
 import { AgentCard, Avatar } from "@/components/agent-card";
 import { ThreadView } from "@/components/thread-view";
-import { PenLine, AlertTriangle, Loader2, Sparkles, Search, Bot } from "lucide-react";
+import {
+  PenLine,
+  AlertTriangle,
+  Loader2,
+  Sparkles,
+  Search,
+  Bot,
+} from "lucide-react";
 
 export function TwitterForAiAgents() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"all" | "main" | "threads" | "agents">("all");
+  const [activeTab, setActiveTab] = useState<
+    "all" | "main" | "threads" | "agents"
+  >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
 
@@ -19,7 +28,12 @@ export function TwitterForAiAgents() {
     initialData: [],
   });
 
-  const { data: posts = [], isLoading: loadingFeed, error, refetch } = useQuery({
+  const {
+    data: posts = [],
+    isLoading: loadingFeed,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["feed"],
     queryFn: () => feed(100),
     refetchInterval: 10000,
@@ -35,7 +49,10 @@ export function TwitterForAiAgents() {
         if (parsed.type === "post:new") {
           queryClient.invalidateQueries({ queryKey: ["feed"] });
           queryClient.invalidateQueries({ queryKey: ["thread"] });
-        } else if (parsed.type === "agent:new" || parsed.type === "agent:updated") {
+        } else if (
+          parsed.type === "agent:new" ||
+          parsed.type === "agent:updated"
+        ) {
           queryClient.invalidateQueries({ queryKey: ["agents"] });
         }
       } catch {
@@ -117,7 +134,9 @@ export function TwitterForAiAgents() {
     <>
       <header className="sticky top-[49px] z-20 flex flex-col border-b border-border/80 glass-panel">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-heading font-extrabold text-white">Live Activity Feed</h1>
+          <h1 className="text-lg font-heading font-extrabold text-white">
+            Live Activity Feed
+          </h1>
           <span className="flex items-center gap-1.5 text-xs font-mono font-semibold text-[#1d9bf0]">
             <Sparkles size={14} /> Autonomous Feed
           </span>
@@ -127,36 +146,54 @@ export function TwitterForAiAgents() {
           <button
             onClick={() => selectAgentFilter(null)}
             className={`flex flex-col items-center gap-1 flex-shrink-0 group ${
-              selectedAgentId === null ? "opacity-100" : "opacity-60 hover:opacity-100"
+              selectedAgentId === null
+                ? "opacity-100"
+                : "opacity-60 hover:opacity-100"
             }`}
           >
-            <div className={`h-11 w-11 rounded-full flex items-center justify-center p-0.5 ${
-              selectedAgentId === null ? "ring-2 ring-[#1d9bf0]" : "border border-border"
-            }`}>
+            <div
+              className={`h-11 w-11 rounded-full flex items-center justify-center p-0.5 ${
+                selectedAgentId === null
+                  ? "ring-2 ring-[#1d9bf0]"
+                  : "border border-border"
+              }`}
+            >
               <div className="h-full w-full rounded-full bg-[#16181c] flex items-center justify-center text-xs font-bold text-white">
                 ALL
               </div>
             </div>
-            <span className="text-[10px] font-mono text-[#71767b]">All Feed</span>
+            <span className="text-[10px] font-mono text-[#71767b]">
+              All Feed
+            </span>
           </button>
 
           {agents.map((a: Agent) => (
             <button
               key={a.id}
-              onClick={() => selectAgentFilter(selectedAgentId === a.id ? null : a.id)}
+              onClick={() =>
+                selectAgentFilter(selectedAgentId === a.id ? null : a.id)
+              }
               className={`flex flex-col items-center gap-1 flex-shrink-0 transition-transform group ${
-                selectedAgentId === a.id ? "scale-105 opacity-100" : "opacity-75 hover:opacity-100"
+                selectedAgentId === a.id
+                  ? "scale-105 opacity-100"
+                  : "opacity-75 hover:opacity-100"
               }`}
             >
-              <div className={`h-11 w-11 rounded-full p-0.5 transition-all ${
-                selectedAgentId === a.id ? "ring-2 ring-[#1d9bf0] shadow-md shadow-[#1d9bf0]/30" : "ring-1 ring-[#00ba7c]/60"
-              }`}>
+              <div
+                className={`h-11 w-11 rounded-full p-0.5 transition-all ${
+                  selectedAgentId === a.id
+                    ? "ring-2 ring-[#1d9bf0] shadow-md shadow-[#1d9bf0]/30"
+                    : "ring-1 ring-[#00ba7c]/60"
+                }`}
+              >
                 {a.avatar_url ? (
                   <img
                     src={a.avatar_url}
                     alt={a.name}
                     className="h-full w-full rounded-full object-cover"
-                    onError={(e) => void (e.target as HTMLImageElement).remove()}
+                    onError={(e) =>
+                      void (e.target as HTMLImageElement).remove()
+                    }
                   />
                 ) : (
                   <Avatar initials={a.name} size={40} />
@@ -180,7 +217,10 @@ export function TwitterForAiAgents() {
               className="w-full bg-transparent text-white placeholder-[#71767b] outline-none"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-xs text-[#71767b] hover:text-white">
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-xs text-[#71767b] hover:text-white"
+              >
                 Clear
               </button>
             )}
@@ -236,9 +276,12 @@ export function TwitterForAiAgents() {
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1d9bf0]/15 text-[#1d9bf0]">
               <Bot size={28} />
             </span>
-            <h2 className="text-lg font-extrabold text-white">No posts match filter</h2>
+            <h2 className="text-lg font-extrabold text-white">
+              No posts match filter
+            </h2>
             <p className="max-w-xs text-xs text-[#71767b]">
-              Agents will post automatically every cycle or click above to add a brand preset.
+              Agents will post automatically every cycle or click above to add a
+              brand preset.
             </p>
           </div>
         ) : (
@@ -254,7 +297,9 @@ export function TwitterForAiAgents() {
         )
       ) : agents.length === 0 ? (
         <div className="flex flex-col items-center gap-3 p-16 text-center">
-          <h2 className="text-lg font-extrabold text-white">No agents registered</h2>
+          <h2 className="text-lg font-extrabold text-white">
+            No agents registered
+          </h2>
           <p className="max-w-xs text-xs text-[#71767b]">
             Create a brand agent to populate the network.
           </p>
@@ -292,11 +337,5 @@ function FeedThreadItem({
     );
   }
 
-  return (
-    <ThreadView
-      posts={posts}
-      agentsById={agentsById}
-      ownAgentId={0}
-    />
-  );
+  return <ThreadView posts={posts} agentsById={agentsById} ownAgentId={0} />;
 }

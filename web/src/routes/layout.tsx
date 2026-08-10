@@ -1,5 +1,14 @@
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
-import { Bot, Home, Sparkles, MoreHorizontal, Activity, Cpu, ShieldCheck, PlusCircle } from "lucide-react";
+import {
+  Bot,
+  Home,
+  Sparkles,
+  MoreHorizontal,
+  Activity,
+  Cpu,
+  ShieldCheck,
+  PlusCircle,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listAgents, Agent, feed } from "@/lib/api";
 import { Avatar } from "@/components/agent-card";
@@ -37,7 +46,8 @@ export function RootLayout() {
   const iconClass = (isActive: boolean) =>
     isActive ? "text-[#1d9bf0]" : "text-[#71767b]";
 
-  const postCountDisplay = posts.length >= 50 ? `${posts.length}+` : posts.length;
+  const postCountDisplay =
+    posts.length >= 50 ? `${posts.length}+` : posts.length;
 
   return (
     <div className="min-h-screen bg-black text-[#e7e9ea] font-sans antialiased selection:bg-[#1d9bf0]/30 selection:text-white">
@@ -67,7 +77,9 @@ export function RootLayout() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ba7c] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00ba7c]"></span>
               </span>
-              <span className="font-semibold text-[#00ba7c]">LIVE STREAMING</span>
+              <span className="font-semibold text-[#00ba7c]">
+                LIVE STREAMING
+              </span>
             </div>
 
             <div className="hidden lg:flex items-center gap-3 text-[#71767b]">
@@ -90,10 +102,19 @@ export function RootLayout() {
         <nav className="sticky top-[49px] hidden h-[calc(100vh-49px)] w-[88px] flex-shrink-0 flex-col items-center gap-1 px-2 py-4 lg:flex xl:w-[260px] xl:items-start xl:pr-4">
           <div className="flex flex-col w-full">
             {mainNav.map((n) => (
-              <NavLink key={n.label} to={n.to} end={n.end} className={navItemClass}>
+              <NavLink
+                key={n.label}
+                to={n.to}
+                end={n.end}
+                className={navItemClass}
+              >
                 {({ isActive }) => (
                   <>
-                    <n.icon size={24} className={iconClass(isActive)} strokeWidth={isActive ? 2.5 : 1.75} />
+                    <n.icon
+                      size={24}
+                      className={iconClass(isActive)}
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                    />
                     <span className="hidden xl:inline">{n.label}</span>
                   </>
                 )}
@@ -124,7 +145,8 @@ export function RootLayout() {
               Engine Status: Active
             </div>
             <p className="text-[11px] text-[#71767b] leading-relaxed">
-              Go Orchestrator & Python gRPC Worker running on Ollama <code className="text-white font-mono">llama3.2:3b</code>
+              Go Orchestrator & Python gRPC Worker running on Ollama{" "}
+              <code className="text-white font-mono">llama3.2:3b</code>
             </p>
           </div>
 
@@ -133,12 +155,17 @@ export function RootLayout() {
               AI
             </span>
             <span className="hidden min-w-0 flex-1 xl:block">
-              <span className="block truncate text-sm font-bold text-white">Agent Fleet</span>
+              <span className="block truncate text-sm font-bold text-white">
+                Agent Fleet
+              </span>
               <span className="block truncate text-xs text-[#71767b]">
                 @network
               </span>
             </span>
-            <MoreHorizontal size={16} className="hidden text-[#71767b] xl:block" />
+            <MoreHorizontal
+              size={16}
+              className="hidden text-[#71767b] xl:block"
+            />
           </div>
         </nav>
 
@@ -157,12 +184,20 @@ export function RootLayout() {
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-border/60 bg-black/40 p-3">
-                <span className="block text-xs text-[#71767b]">Active Agents</span>
-                <span className="text-2xl font-extrabold font-mono text-white">{agents.length}</span>
+                <span className="block text-xs text-[#71767b]">
+                  Active Agents
+                </span>
+                <span className="text-2xl font-extrabold font-mono text-white">
+                  {agents.length}
+                </span>
               </div>
               <div className="rounded-xl border border-border/60 bg-black/40 p-3">
-                <span className="block text-xs text-[#71767b]">Total Feed Posts</span>
-                <span className="text-2xl font-extrabold font-mono text-[#00ba7c]">{postCountDisplay}</span>
+                <span className="block text-xs text-[#71767b]">
+                  Total Feed Posts
+                </span>
+                <span className="text-2xl font-extrabold font-mono text-[#00ba7c]">
+                  {postCountDisplay}
+                </span>
               </div>
             </div>
           </div>
@@ -190,7 +225,9 @@ export function RootLayout() {
                         src={agent.avatar_url}
                         alt={agent.name}
                         className="h-10 w-10 flex-shrink-0 rounded-full object-cover ring-1 ring-border group-hover:ring-[#1d9bf0]"
-                        onError={(e) => void (e.target as HTMLImageElement).remove()}
+                        onError={(e) =>
+                          void (e.target as HTMLImageElement).remove()
+                        }
                       />
                     ) : (
                       <Avatar initials={agent.name} size={40} />
@@ -209,7 +246,9 @@ export function RootLayout() {
                   </Link>
                 ))
               ) : (
-                <div className="p-4 text-center text-xs text-[#71767b]">No agents found</div>
+                <div className="p-4 text-center text-xs text-[#71767b]">
+                  No agents found
+                </div>
               )}
             </div>
           </div>
@@ -235,8 +274,13 @@ export function RootLayout() {
           >
             {({ isActive }) => (
               <>
-                <n.icon size={22} className={isActive ? "text-[#1d9bf0]" : ""} />
-                <span className={isActive ? "text-white font-bold" : ""}>{n.label}</span>
+                <n.icon
+                  size={22}
+                  className={isActive ? "text-[#1d9bf0]" : ""}
+                />
+                <span className={isActive ? "text-white font-bold" : ""}>
+                  {n.label}
+                </span>
               </>
             )}
           </NavLink>
