@@ -8,7 +8,6 @@ package twitterforaiworkerpb
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -27,11 +26,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
+// Service hosted by the Python AI Worker to process agent deliberation turns
 type WorkerClient interface {
-	// Ask the worker to reason about whether/how an agent should respond
-	// to a given feed post. Returns a structured decision.
-	Think(ctx context.Context, in *ThinkRequest, opts ...grpc.CallOption) (*ThinkReply, error)
+	// Triggers an agent turn (proactive post creation or reactive reply deliberation)
+	Think(ctx context.Context, in *ThinkRequest, opts ...grpc.CallOption) (*ThinkResponse, error)
 }
 
 type workerClient struct {
@@ -42,9 +40,9 @@ func NewWorkerClient(cc grpc.ClientConnInterface) WorkerClient {
 	return &workerClient{cc}
 }
 
-func (c *workerClient) Think(ctx context.Context, in *ThinkRequest, opts ...grpc.CallOption) (*ThinkReply, error) {
+func (c *workerClient) Think(ctx context.Context, in *ThinkRequest, opts ...grpc.CallOption) (*ThinkResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ThinkReply)
+	out := new(ThinkResponse)
 	err := c.cc.Invoke(ctx, Worker_Think_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -56,11 +54,10 @@ func (c *workerClient) Think(ctx context.Context, in *ThinkRequest, opts ...grpc
 // All implementations must embed UnimplementedWorkerServer
 // for forward compatibility.
 //
-// Worker is the Python AI worker that performs the "Think" step (LLM reasoning).
+// Service hosted by the Python AI Worker to process agent deliberation turns
 type WorkerServer interface {
-	// Ask the worker to reason about whether/how an agent should respond
-	// to a given feed post. Returns a structured decision.
-	Think(context.Context, *ThinkRequest) (*ThinkReply, error)
+	// Triggers an agent turn (proactive post creation or reactive reply deliberation)
+	Think(context.Context, *ThinkRequest) (*ThinkResponse, error)
 	mustEmbedUnimplementedWorkerServer()
 }
 
@@ -71,7 +68,7 @@ type WorkerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedWorkerServer struct{}
 
-func (UnimplementedWorkerServer) Think(context.Context, *ThinkRequest) (*ThinkReply, error) {
+func (UnimplementedWorkerServer) Think(context.Context, *ThinkRequest) (*ThinkResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Think not implemented")
 }
 func (UnimplementedWorkerServer) mustEmbedUnimplementedWorkerServer() {}
@@ -123,6 +120,114 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Think",
 			Handler:    _Worker_Think_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "twitterforaiworker/v1/worker.proto",
+}
+
+const (
+	ToolExecutor_ExecuteTool_FullMethodName = "/twitterforaiworker.ToolExecutor/ExecuteTool"
+)
+
+// ToolExecutorClient is the client API for ToolExecutor service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Service hosted by the Go backend to execute tools requested by the AI Worker
+type ToolExecutorClient interface {
+	// Executes a tool call (get_feed, get_thread, get_memories, post, reply) on backend stores
+	ExecuteTool(ctx context.Context, in *ToolCall, opts ...grpc.CallOption) (*ToolResult, error)
+}
+
+type toolExecutorClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewToolExecutorClient(cc grpc.ClientConnInterface) ToolExecutorClient {
+	return &toolExecutorClient{cc}
+}
+
+func (c *toolExecutorClient) ExecuteTool(ctx context.Context, in *ToolCall, opts ...grpc.CallOption) (*ToolResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ToolResult)
+	err := c.cc.Invoke(ctx, ToolExecutor_ExecuteTool_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ToolExecutorServer is the server API for ToolExecutor service.
+// All implementations must embed UnimplementedToolExecutorServer
+// for forward compatibility.
+//
+// Service hosted by the Go backend to execute tools requested by the AI Worker
+type ToolExecutorServer interface {
+	// Executes a tool call (get_feed, get_thread, get_memories, post, reply) on backend stores
+	ExecuteTool(context.Context, *ToolCall) (*ToolResult, error)
+	mustEmbedUnimplementedToolExecutorServer()
+}
+
+// UnimplementedToolExecutorServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedToolExecutorServer struct{}
+
+func (UnimplementedToolExecutorServer) ExecuteTool(context.Context, *ToolCall) (*ToolResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExecuteTool not implemented")
+}
+func (UnimplementedToolExecutorServer) mustEmbedUnimplementedToolExecutorServer() {}
+func (UnimplementedToolExecutorServer) testEmbeddedByValue()                      {}
+
+// UnsafeToolExecutorServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ToolExecutorServer will
+// result in compilation errors.
+type UnsafeToolExecutorServer interface {
+	mustEmbedUnimplementedToolExecutorServer()
+}
+
+func RegisterToolExecutorServer(s grpc.ServiceRegistrar, srv ToolExecutorServer) {
+	// If the following call panics, it indicates UnimplementedToolExecutorServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&ToolExecutor_ServiceDesc, srv)
+}
+
+func _ToolExecutor_ExecuteTool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ToolCall)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ToolExecutorServer).ExecuteTool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ToolExecutor_ExecuteTool_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ToolExecutorServer).ExecuteTool(ctx, req.(*ToolCall))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ToolExecutor_ServiceDesc is the grpc.ServiceDesc for ToolExecutor service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ToolExecutor_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "twitterforaiworker.ToolExecutor",
+	HandlerType: (*ToolExecutorServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ExecuteTool",
+			Handler:    _ToolExecutor_ExecuteTool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

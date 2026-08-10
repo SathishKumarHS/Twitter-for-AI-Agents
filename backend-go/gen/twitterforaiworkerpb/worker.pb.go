@@ -7,12 +7,11 @@
 package twitterforaiworkerpb
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -22,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Represents an agent profile and its behavioral guidelines
 type Agent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -33,8 +33,6 @@ type Agent struct {
 	Interests     []string               `protobuf:"bytes,7,rep,name=interests,proto3" json:"interests,omitempty"`
 	AvatarUrl     string                 `protobuf:"bytes,8,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
 	Active        bool                   `protobuf:"varint,9,opt,name=active,proto3" json:"active,omitempty"`
-	Description   string                 `protobuf:"bytes,10,opt,name=description,proto3" json:"description,omitempty"`
-	Instructions  string                 `protobuf:"bytes,11,opt,name=instructions,proto3" json:"instructions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -132,26 +130,13 @@ func (x *Agent) GetActive() bool {
 	return false
 }
 
-func (x *Agent) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *Agent) GetInstructions() string {
-	if x != nil {
-		return x.Instructions
-	}
-	return ""
-}
-
+// Represents a post or reply on the network
 type Post struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	AgentId       int64                  `protobuf:"varint,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	Body          string                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
-	Kind          string                 `protobuf:"bytes,4,opt,name=kind,proto3" json:"kind,omitempty"`
+	Kind          string                 `protobuf:"bytes,4,opt,name=kind,proto3" json:"kind,omitempty"` // "post" or "reply"
 	ParentId      int64                  `protobuf:"varint,5,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
 	RootId        int64                  `protobuf:"varint,6,opt,name=root_id,json=rootId,proto3" json:"root_id,omitempty"`
 	Mentions      []int64                `protobuf:"varint,7,rep,packed,name=mentions,proto3" json:"mentions,omitempty"`
@@ -254,24 +239,157 @@ func (x *Post) GetAuthorName() string {
 	return ""
 }
 
+// Tool execution request sent from AI Worker to Go backend
+type ToolCall struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       int64                  `protobuf:"varint,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`           // e.g. "get_feed", "get_thread", "get_memories", "post", "reply"
+	Arguments     string                 `protobuf:"bytes,3,opt,name=arguments,proto3" json:"arguments,omitempty"` // JSON-encoded tool arguments
+	Mode          string                 `protobuf:"bytes,4,opt,name=mode,proto3" json:"mode,omitempty"`           // "proactive" or "respond"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToolCall) Reset() {
+	*x = ToolCall{}
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToolCall) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToolCall) ProtoMessage() {}
+
+func (x *ToolCall) ProtoReflect() protoreflect.Message {
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToolCall.ProtoReflect.Descriptor instead.
+func (*ToolCall) Descriptor() ([]byte, []int) {
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ToolCall) GetAgentId() int64 {
+	if x != nil {
+		return x.AgentId
+	}
+	return 0
+}
+
+func (x *ToolCall) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ToolCall) GetArguments() string {
+	if x != nil {
+		return x.Arguments
+	}
+	return ""
+}
+
+func (x *ToolCall) GetMode() string {
+	if x != nil {
+		return x.Mode
+	}
+	return ""
+}
+
+// Tool execution result returned from Go backend to AI Worker
+type ToolResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Output        string                 `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty"` // JSON-encoded return data or error text
+	Error         bool                   `protobuf:"varint,3,opt,name=error,proto3" json:"error,omitempty"`  // True if tool execution failed
+	Acted         bool                   `protobuf:"varint,4,opt,name=acted,proto3" json:"acted,omitempty"`  // True if a database write side-effect occurred (post/reply)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToolResult) Reset() {
+	*x = ToolResult{}
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToolResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToolResult) ProtoMessage() {}
+
+func (x *ToolResult) ProtoReflect() protoreflect.Message {
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToolResult.ProtoReflect.Descriptor instead.
+func (*ToolResult) Descriptor() ([]byte, []int) {
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ToolResult) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ToolResult) GetOutput() string {
+	if x != nil {
+		return x.Output
+	}
+	return ""
+}
+
+func (x *ToolResult) GetError() bool {
+	if x != nil {
+		return x.Error
+	}
+	return false
+}
+
+func (x *ToolResult) GetActed() bool {
+	if x != nil {
+		return x.Acted
+	}
+	return false
+}
+
+// Payload sent to trigger AI Worker deliberation
 type ThinkRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Agent *Agent                 `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
-	Post  *Post                  `protobuf:"bytes,2,opt,name=post,proto3" json:"post,omitempty"`
-	// optional: recent context events the worker should consider
-	Recent []*Post `protobuf:"bytes,3,rep,name=recent,proto3" json:"recent,omitempty"`
-	// mode: "respond" (react to post), "proactive" (author original content),
-	// or "deliberate" (goal-driven next-action decision)
-	Mode string `protobuf:"bytes,4,opt,name=mode,proto3" json:"mode,omitempty"`
-	// optional: the agent's long-term memories, so decisions are informed by its history
-	Memories      []string `protobuf:"bytes,5,rep,name=memories,proto3" json:"memories,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Agent         *Agent                 `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
+	Post          *Post                  `protobuf:"bytes,2,opt,name=post,proto3" json:"post,omitempty"`
+	Mode          string                 `protobuf:"bytes,3,opt,name=mode,proto3" json:"mode,omitempty"` // "proactive" or "respond"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ThinkRequest) Reset() {
 	*x = ThinkRequest{}
-	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[2]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -283,7 +401,7 @@ func (x *ThinkRequest) String() string {
 func (*ThinkRequest) ProtoMessage() {}
 
 func (x *ThinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[2]
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -296,7 +414,7 @@ func (x *ThinkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThinkRequest.ProtoReflect.Descriptor instead.
 func (*ThinkRequest) Descriptor() ([]byte, []int) {
-	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{2}
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ThinkRequest) GetAgent() *Agent {
@@ -313,13 +431,6 @@ func (x *ThinkRequest) GetPost() *Post {
 	return nil
 }
 
-func (x *ThinkRequest) GetRecent() []*Post {
-	if x != nil {
-		return x.Recent
-	}
-	return nil
-}
-
 func (x *ThinkRequest) GetMode() string {
 	if x != nil {
 		return x.Mode
@@ -327,36 +438,29 @@ func (x *ThinkRequest) GetMode() string {
 	return ""
 }
 
-func (x *ThinkRequest) GetMemories() []string {
-	if x != nil {
-		return x.Memories
-	}
-	return nil
-}
-
-type ThinkReply struct {
+// Result returned after AI Worker deliberation completes
+type ThinkResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Action        string                 `protobuf:"bytes,1,opt,name=action,proto3" json:"action,omitempty"` // post | reply | ignore
-	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	Executed      bool                   `protobuf:"varint,1,opt,name=executed,proto3" json:"executed,omitempty"` // True if a post or reply was published during this turn
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ThinkReply) Reset() {
-	*x = ThinkReply{}
-	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[3]
+func (x *ThinkResponse) Reset() {
+	*x = ThinkResponse{}
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ThinkReply) String() string {
+func (x *ThinkResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ThinkReply) ProtoMessage() {}
+func (*ThinkResponse) ProtoMessage() {}
 
-func (x *ThinkReply) ProtoReflect() protoreflect.Message {
-	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[3]
+func (x *ThinkResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_twitterforaiworker_v1_worker_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -367,30 +471,23 @@ func (x *ThinkReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ThinkReply.ProtoReflect.Descriptor instead.
-func (*ThinkReply) Descriptor() ([]byte, []int) {
-	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{3}
+// Deprecated: Use ThinkResponse.ProtoReflect.Descriptor instead.
+func (*ThinkResponse) Descriptor() ([]byte, []int) {
+	return file_twitterforaiworker_v1_worker_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ThinkReply) GetAction() string {
+func (x *ThinkResponse) GetExecuted() bool {
 	if x != nil {
-		return x.Action
+		return x.Executed
 	}
-	return ""
-}
-
-func (x *ThinkReply) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
+	return false
 }
 
 var File_twitterforaiworker_v1_worker_proto protoreflect.FileDescriptor
 
 const file_twitterforaiworker_v1_worker_proto_rawDesc = "" +
 	"\n" +
-	"\"twitterforaiworker/v1/worker.proto\x12\x12twitterforaiworker\"\xaa\x02\n" +
+	"\"twitterforaiworker/v1/worker.proto\x12\x12twitterforaiworker\"\xe4\x01\n" +
 	"\x05Agent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x16\n" +
 	"\x06handle\x18\x02 \x01(\tR\x06handle\x12\x12\n" +
@@ -401,10 +498,7 @@ const file_twitterforaiworker_v1_worker_proto_rawDesc = "" +
 	"\tinterests\x18\a \x03(\tR\tinterests\x12\x1d\n" +
 	"\n" +
 	"avatar_url\x18\b \x01(\tR\tavatarUrl\x12\x16\n" +
-	"\x06active\x18\t \x01(\bR\x06active\x12 \n" +
-	"\vdescription\x18\n" +
-	" \x01(\tR\vdescription\x12\"\n" +
-	"\finstructions\x18\v \x01(\tR\finstructions\"\xf1\x01\n" +
+	"\x06active\x18\t \x01(\bR\x06active\"\xf1\x01\n" +
 	"\x04Post\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
 	"\bagent_id\x18\x02 \x01(\x03R\aagentId\x12\x12\n" +
@@ -415,19 +509,28 @@ const file_twitterforaiworker_v1_worker_proto_rawDesc = "" +
 	"\bmentions\x18\a \x03(\x03R\bmentions\x12#\n" +
 	"\rauthor_handle\x18\b \x01(\tR\fauthorHandle\x12\x1f\n" +
 	"\vauthor_name\x18\t \x01(\tR\n" +
-	"authorName\"\xcf\x01\n" +
+	"authorName\"k\n" +
+	"\bToolCall\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\x03R\aagentId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1c\n" +
+	"\targuments\x18\x03 \x01(\tR\targuments\x12\x12\n" +
+	"\x04mode\x18\x04 \x01(\tR\x04mode\"d\n" +
+	"\n" +
+	"ToolResult\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06output\x18\x02 \x01(\tR\x06output\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\bR\x05error\x12\x14\n" +
+	"\x05acted\x18\x04 \x01(\bR\x05acted\"\x81\x01\n" +
 	"\fThinkRequest\x12/\n" +
 	"\x05agent\x18\x01 \x01(\v2\x19.twitterforaiworker.AgentR\x05agent\x12,\n" +
-	"\x04post\x18\x02 \x01(\v2\x18.twitterforaiworker.PostR\x04post\x120\n" +
-	"\x06recent\x18\x03 \x03(\v2\x18.twitterforaiworker.PostR\x06recent\x12\x12\n" +
-	"\x04mode\x18\x04 \x01(\tR\x04mode\x12\x1a\n" +
-	"\bmemories\x18\x05 \x03(\tR\bmemories\"8\n" +
-	"\n" +
-	"ThinkReply\x12\x16\n" +
-	"\x06action\x18\x01 \x01(\tR\x06action\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text2S\n" +
-	"\x06Worker\x12I\n" +
-	"\x05Think\x12 .twitterforaiworker.ThinkRequest\x1a\x1e.twitterforaiworker.ThinkReplyB[ZYgithub.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpbb\x06proto3"
+	"\x04post\x18\x02 \x01(\v2\x18.twitterforaiworker.PostR\x04post\x12\x12\n" +
+	"\x04mode\x18\x03 \x01(\tR\x04mode\"+\n" +
+	"\rThinkResponse\x12\x1a\n" +
+	"\bexecuted\x18\x01 \x01(\bR\bexecuted2V\n" +
+	"\x06Worker\x12L\n" +
+	"\x05Think\x12 .twitterforaiworker.ThinkRequest\x1a!.twitterforaiworker.ThinkResponse2[\n" +
+	"\fToolExecutor\x12K\n" +
+	"\vExecuteTool\x12\x1c.twitterforaiworker.ToolCall\x1a\x1e.twitterforaiworker.ToolResultB[ZYgithub.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb;twitterforaiworkerpbb\x06proto3"
 
 var (
 	file_twitterforaiworker_v1_worker_proto_rawDescOnce sync.Once
@@ -441,24 +544,27 @@ func file_twitterforaiworker_v1_worker_proto_rawDescGZIP() []byte {
 	return file_twitterforaiworker_v1_worker_proto_rawDescData
 }
 
-var file_twitterforaiworker_v1_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_twitterforaiworker_v1_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_twitterforaiworker_v1_worker_proto_goTypes = []any{
-	(*Agent)(nil),        // 0: twitterforaiworker.Agent
-	(*Post)(nil),         // 1: twitterforaiworker.Post
-	(*ThinkRequest)(nil), // 2: twitterforaiworker.ThinkRequest
-	(*ThinkReply)(nil),   // 3: twitterforaiworker.ThinkReply
+	(*Agent)(nil),         // 0: twitterforaiworker.Agent
+	(*Post)(nil),          // 1: twitterforaiworker.Post
+	(*ToolCall)(nil),      // 2: twitterforaiworker.ToolCall
+	(*ToolResult)(nil),    // 3: twitterforaiworker.ToolResult
+	(*ThinkRequest)(nil),  // 4: twitterforaiworker.ThinkRequest
+	(*ThinkResponse)(nil), // 5: twitterforaiworker.ThinkResponse
 }
 var file_twitterforaiworker_v1_worker_proto_depIdxs = []int32{
 	0, // 0: twitterforaiworker.ThinkRequest.agent:type_name -> twitterforaiworker.Agent
 	1, // 1: twitterforaiworker.ThinkRequest.post:type_name -> twitterforaiworker.Post
-	1, // 2: twitterforaiworker.ThinkRequest.recent:type_name -> twitterforaiworker.Post
-	2, // 3: twitterforaiworker.Worker.Think:input_type -> twitterforaiworker.ThinkRequest
-	3, // 4: twitterforaiworker.Worker.Think:output_type -> twitterforaiworker.ThinkReply
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	4, // 2: twitterforaiworker.Worker.Think:input_type -> twitterforaiworker.ThinkRequest
+	2, // 3: twitterforaiworker.ToolExecutor.ExecuteTool:input_type -> twitterforaiworker.ToolCall
+	5, // 4: twitterforaiworker.Worker.Think:output_type -> twitterforaiworker.ThinkResponse
+	3, // 5: twitterforaiworker.ToolExecutor.ExecuteTool:output_type -> twitterforaiworker.ToolResult
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_twitterforaiworker_v1_worker_proto_init() }
@@ -472,9 +578,9 @@ func file_twitterforaiworker_v1_worker_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_twitterforaiworker_v1_worker_proto_rawDesc), len(file_twitterforaiworker_v1_worker_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_twitterforaiworker_v1_worker_proto_goTypes,
 		DependencyIndexes: file_twitterforaiworker_v1_worker_proto_depIdxs,

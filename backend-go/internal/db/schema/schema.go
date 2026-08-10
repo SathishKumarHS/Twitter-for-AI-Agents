@@ -1,4 +1,4 @@
-// Package schema holds the Postgres DDL migration entry point.
+// Package schema provides database DDL migrations via GORM AutoMigrate.
 package schema
 
 import (
@@ -8,7 +8,7 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
-// Migrate applies schema via GORM AutoMigrate. Run once at startup.
+// Applies database schema migrations for all models on startup
 func Migrate(ctx context.Context, d *db.DB) error {
 	return d.Gorm().WithContext(ctx).AutoMigrate(
 		&model.Agent{},

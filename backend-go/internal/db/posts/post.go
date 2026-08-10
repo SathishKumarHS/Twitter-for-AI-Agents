@@ -1,4 +1,4 @@
-// Package posts defines the Post model and its storage contract.
+// Package posts implements storage and queries for posts, replies, threads, and timelines.
 package posts
 
 import (
@@ -12,11 +12,13 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
+// GORM-backed storage implementation for posts and replies
 type PostsDB struct {
 	g          *gorm.DB
 	LastSeenDB lastseen.LastSeenInterface
 }
 
+// Instantiates a new PostsDB store implementing PostInterface
 func NewPostsDB(g *gorm.DB, lastSeenDB lastseen.LastSeenInterface) PostInterface {
 	return &PostsDB{
 		g:          g,
@@ -24,6 +26,7 @@ func NewPostsDB(g *gorm.DB, lastSeenDB lastseen.LastSeenInterface) PostInterface
 	}
 }
 
+// Fetches posts created after an agent's last-seen ID (excluding the agent's own posts)
 func (s *PostsDB) NewPostsAfter(ctx context.Context, agentID int64) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
@@ -33,6 +36,7 @@ func (s *PostsDB) NewPostsAfter(ctx context.Context, agentID int64) ([]model.Pos
 	return out, err
 }
 
+// Creates a new post or reply, resolves @mentions, sets root thread ID, and persists to DB
 func (s *PostsDB) Create(ctx context.Context, agentID int64, body string, parentID int64) (model.Post, error) {
 	p := model.Post{AgentID: agentID, Body: body, Kind: "post"}
 	if parentID != 0 {
@@ -64,6 +68,7 @@ func (s *PostsDB) Create(ctx context.Context, agentID int64, body string, parent
 	return p, nil
 }
 
+// Helper: extracts unique @handle mention strings from post body text
 func extractMentionHandles(body string) []string {
 	words := strings.Fields(body)
 	seen := make(map[string]bool)
@@ -81,6 +86,7 @@ func extractMentionHandles(body string) []string {
 	return handles
 }
 
+// Fetches the most recent posts on the network timeline up to limit
 func (s *PostsDB) Recent(ctx context.Context, limit int) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
@@ -89,6 +95,7 @@ func (s *PostsDB) Recent(ctx context.Context, limit int) ([]model.Post, error) {
 	return out, err
 }
 
+// Fetches all posts belonging to a conversation thread (root post and all replies)
 func (s *PostsDB) Thread(ctx context.Context, rootID int64) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
@@ -98,6 +105,7 @@ func (s *PostsDB) Thread(ctx context.Context, rootID int64) ([]model.Post, error
 	return out, err
 }
 
+// Fetches a thread and nests replies under parent posts to form a tree structure
 func (s *PostsDB) ThreadTree(ctx context.Context, rootID int64) ([]model.Post, error) {
 	flat, err := s.Thread(ctx, rootID)
 	if err != nil {
@@ -116,6 +124,7 @@ func (s *PostsDB) ThreadTree(ctx context.Context, rootID int64) ([]model.Post, e
 	return roots, nil
 }
 
+// Helper: builds a nested tree of comments from a flat list of thread posts
 func buildThreadTree(flat []model.Post) []model.Post {
 	byParent := make(map[int64][]model.Post)
 	var roots []model.Post
@@ -141,6 +150,7 @@ func buildThreadTree(flat []model.Post) []model.Post {
 	return roots
 }
 
+// Fetches an agent's personal timeline posts up to limit
 func (s *PostsDB) Timeline(ctx context.Context, agentID int64, limit int) ([]model.Post, error) {
 	var out []model.Post
 	err := s.g.WithContext(ctx).
@@ -152,6 +162,7 @@ func (s *PostsDB) Timeline(ctx context.Context, agentID int64, limit int) ([]mod
 	return out, err
 }
 
+// Fetches the timestamp of the last top-level main post created by an agent
 func (s *PostsDB) LastMainPost(ctx context.Context, agentID int64) (time.Time, error) {
 	var p model.Post
 	err := s.g.WithContext(ctx).

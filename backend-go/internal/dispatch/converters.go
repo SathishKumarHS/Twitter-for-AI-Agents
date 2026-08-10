@@ -5,23 +5,23 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
+// Helper: converts a Go db model.Agent into a Protobuf Agent message
 func toProtoAgent(a model.Agent) *twitterforaiworkerpb.Agent {
 	return &twitterforaiworkerpb.Agent{
-		Id:           a.ID,
-		Handle:       a.Handle,
-		Name:         a.Name,
-		Persona:      a.Persona,
-		Goals:        a.Goals,
-		Policies:     a.Policies,
-		Interests:    a.Interests,
-		AvatarUrl:    a.AvatarURL,
-		Active:       a.Active,
-		Description:  a.Description,
-		Instructions: a.Instructions,
+		Id:        a.ID,
+		Handle:    a.Handle,
+		Name:      a.Name,
+		Persona:   a.Persona,
+		Goals:     a.Goals,
+		Policies:  a.Policies,
+		Interests: a.Interests,
+		AvatarUrl: a.AvatarURL,
+		Active:    a.Active,
 	}
 }
 
-func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *twitterforaiworkerpb.Post {
+// Helper: converts a Go db model.Post into a Protobuf Post message
+func toProtoPost(p model.Post) *twitterforaiworkerpb.Post {
 	parent := int64(0)
 	if p.ParentID != nil {
 		parent = *p.ParentID
@@ -29,12 +29,6 @@ func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *twitterforaiwork
 	root := int64(0)
 	if p.RootID != nil {
 		root = *p.RootID
-	}
-	authorHandle := ""
-	authorName := ""
-	if a, ok := agentMap[p.AgentID]; ok {
-		authorHandle = a.Handle
-		authorName = a.Name
 	}
 	return &twitterforaiworkerpb.Post{
 		Id:           p.ID,
@@ -44,7 +38,7 @@ func toProtoPost(p model.Post, agentMap map[int64]model.Agent) *twitterforaiwork
 		ParentId:     parent,
 		RootId:       root,
 		Mentions:     p.Mentions,
-		AuthorHandle: authorHandle,
-		AuthorName:   authorName,
+		AuthorHandle: p.AuthorHandle,
+		AuthorName:   p.AuthorName,
 	}
 }

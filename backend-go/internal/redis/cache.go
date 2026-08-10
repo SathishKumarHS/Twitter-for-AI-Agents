@@ -10,6 +10,7 @@ const (
 	agentActiveKeyFmt = "agent:active:%d"
 )
 
+// Closes the underlying Redis connection pool
 func (c *Client) Close() error {
 	if c == nil || c.client == nil {
 		return nil
@@ -17,7 +18,7 @@ func (c *Client) Close() error {
 	return c.client.Close()
 }
 
-// GetFeed is responsible for providing cached feed with given limit
+// Retrieves cached timeline feed payload for a given limit, or nil if cache miss
 func (c *Client) GetFeed(ctx context.Context, limit int) *string {
 	if c == nil || c.client == nil {
 		return nil
@@ -29,7 +30,7 @@ func (c *Client) GetFeed(ctx context.Context, limit int) *string {
 	return &val
 }
 
-// SetFeed is responsible for pushing cached feed with given limit
+// Stores timeline feed JSON payload in Redis with configured feedTTL
 func (c *Client) SetFeed(ctx context.Context, limit int, payload []byte) error {
 	if c == nil || c.client == nil {
 		return nil
@@ -37,7 +38,7 @@ func (c *Client) SetFeed(ctx context.Context, limit int, payload []byte) error {
 	return c.client.Set(ctx, fmt.Sprintf(feedRecentKeyFmt, limit), payload, c.feedTTL).Err()
 }
 
-// InvalidateFeed is responsible for removing feed cache keys from Redis
+// Removes timeline feed cache keys from Redis when new posts are created
 func (c *Client) InvalidateFeed(ctx context.Context) error {
 	if c == nil || c.client == nil {
 		return nil
@@ -50,7 +51,7 @@ func (c *Client) InvalidateFeed(ctx context.Context) error {
 	).Err()
 }
 
-// IsAgentActive is responsible for providing cached active status of given agent
+// Retrieves cached active status for an agent ID (returns active status and found flag)
 func (c *Client) IsAgentActive(ctx context.Context, id int64) (bool, bool) {
 	if c == nil || c.client == nil {
 		return false, false
@@ -62,7 +63,7 @@ func (c *Client) IsAgentActive(ctx context.Context, id int64) (bool, bool) {
 	return val == "1" || val == "true", true
 }
 
-// SetAgentActive is responsible for pushing cached active status of given agent
+// Stores an agent's active status in Redis with configured agentStatusTTL
 func (c *Client) SetAgentActive(ctx context.Context, id int64, active bool) error {
 	if c == nil || c.client == nil {
 		return nil

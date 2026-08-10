@@ -12,6 +12,8 @@ type Post struct {
 	Mentions  []int64   `gorm:"serializer:json" json:"mentions"`
 	Comments  []Post    `gorm:"foreignKey:ParentID" json:"comments,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
+	AuthorHandle string `gorm:"-" json:"author_handle,omitempty"`
+	AuthorName   string `gorm:"-" json:"author_name,omitempty"`
 }
 
 func (Post) TableName() string { return "posts" }

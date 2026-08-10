@@ -1,3 +1,4 @@
+// Package server manages the HTTP REST API endpoints and WebSocket live event server.
 package server
 
 import (
@@ -13,6 +14,7 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/internal/server/websocket"
 )
 
+// HTTP server instance holding REST handlers, WebSocket server, and http.Server
 type Server struct {
 	address         string
 	handlers        *handlers.Handlers
@@ -20,6 +22,7 @@ type Server struct {
 	server          *http.Server
 }
 
+// Instantiates a new Server with database, event hub, and redis dependencies
 func New(addr string, db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface) *Server {
 	return &Server{
 		address:         addr,
@@ -28,6 +31,7 @@ func New(addr string, db *db.DB, hub events.HubInterface, redisClient redis.Redi
 	}
 }
 
+// Starts the HTTP web server listening for incoming REST and WebSocket requests
 func (s *Server) ListenAndServe() error {
 	mux := http.NewServeMux()
 	s.routes(mux)
@@ -39,6 +43,7 @@ func (s *Server) ListenAndServe() error {
 	return s.server.ListenAndServe()
 }
 
+// Gracefully shuts down the HTTP web server
 func (s *Server) Shutdown(ctx context.Context) error {
 	if s.server == nil {
 		return nil
@@ -46,12 +51,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }
 
+// Registers HTTP REST endpoints and WebSocket route handlers on the ServeMux
 func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "ok")
 	})
 
-	// REST
+	// REST API endpoints
 	mux.HandleFunc("GET /api/agents", s.handlers.ListAgents)
 	mux.HandleFunc("POST /api/agents", s.handlers.CreateAgent)
 	mux.HandleFunc("GET /api/agents/{id}", s.handlers.GetAgent)
@@ -60,8 +66,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/agents/{id}/posts", s.handlers.AgentPosts)
 	mux.HandleFunc("GET /api/posts", s.handlers.Feed)
 	mux.HandleFunc("GET /api/posts/thread/{id}", s.handlers.Thread)
-	mux.HandleFunc("GET /api/logs", s.handlers.GetLogs)
 
-	// WebSocket
+	// WebSocket live events route
 	mux.Handle("/ws", s.websocketServer)
 }

@@ -1,73 +1,61 @@
+// Package scheduler manages periodic polling and posting turn schedules for active agents.
 package scheduler
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
-	"github.com/twitter-for-ai-agents/backend-go/internal/dispatch"
-	"github.com/twitter-for-ai-agents/backend-go/internal/events"
-	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
-	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/scheduler/evaluator"
 )
 
-const lockTTLMargin = 60 * time.Second
-
+// Drives periodic agent turn schedules across worker goroutines
 type Scheduler struct {
-	interval      time.Duration
-	postCooldown  time.Duration
-	turnTimeout   time.Duration
+	pollInterval  time.Duration
+	postInterval  time.Duration
 	maxConcurrent int
-	queue         chan turn
+	queue         chan evaluator.Turn
 	wg            sync.WaitGroup
-	locks         redis.RedisInterface
 	db            *db.DB
-	dispatcher    dispatch.DispatcherInterface
-	hub           events.HubInterface
-	cache         redis.RedisInterface
-	rootCtx       context.Context
+	evaluator     evaluator.EvaluatorInterface
 	cancel        context.CancelFunc
 	done          chan struct{}
 }
 
-func New(interval, postCooldown, turnTimeout time.Duration, maxConcurrent int, locks redis.RedisInterface, db *db.DB, d dispatch.DispatcherInterface, hub events.HubInterface, c redis.RedisInterface) SchedulerInterface {
+// Instantiates a new Scheduler with configured poll/post intervals and worker concurrency limit
+func New(
+	pollInterval, postInterval time.Duration,
+	maxConcurrent int,
+	db *db.DB,
+	eval evaluator.EvaluatorInterface,
+) *Scheduler {
 	return &Scheduler{
-		interval:      interval,
-		postCooldown:  postCooldown,
-		turnTimeout:   turnTimeout,
+		pollInterval:  pollInterval,
+		postInterval:  postInterval,
 		maxConcurrent: maxConcurrent,
-		queue:         make(chan turn, maxConcurrent),
-		locks:         locks,
+		queue:         make(chan evaluator.Turn, maxConcurrent),
 		db:            db,
-		dispatcher:    d,
-		hub:           hub,
-		cache:         c,
+		evaluator:     eval,
 		done:          make(chan struct{}),
 	}
 }
 
-func (s *Scheduler) invalidateFeedCache(ctx context.Context) {
-	if s.cache != nil {
-		_ = s.cache.InvalidateFeed(ctx)
-	}
-}
-
+// Starts the worker goroutine pool and ticker loops driving periodic turns
 func (s *Scheduler) Start(parent context.Context) {
 	ctx, cancel := context.WithCancel(parent)
-	s.rootCtx = ctx
 	s.cancel = cancel
 	for i := 0; i < s.maxConcurrent; i++ {
 		s.wg.Add(1)
 		go s.worker(ctx)
 	}
 	go s.run(ctx)
-	msg := fmt.Sprintf("Scheduler started (review interval=%s, agent post cooldown=%s, workers=%d)", s.interval, s.postCooldown, s.maxConcurrent)
-	logs.Info(logs.SystemNamespace, msg)
+	slog.Info("Scheduler started", "poll_interval", s.pollInterval, "post_interval", s.postInterval, "workers", s.maxConcurrent)
 }
 
+// Stops ticker loops and waits for all active worker goroutines to finish
 func (s *Scheduler) Stop() {
 	if s.cancel != nil {
 		s.cancel()
@@ -76,24 +64,42 @@ func (s *Scheduler) Stop() {
 	s.wg.Wait()
 }
 
+// Submits a deliberation turn to the worker pool queue if the agent is active
+func (s *Scheduler) SubmitTurn(ctx context.Context, t evaluator.Turn) {
+	if !t.Agent.Active {
+		return
+	}
+	select {
+	case s.queue <- t:
+	case <-ctx.Done():
+	}
+}
+
+// Runs the main ticker loops driving review ticks (poll interval) and post ticks (post interval)
 func (s *Scheduler) run(ctx context.Context) {
 	defer close(s.done)
-	ticker := time.NewTicker(s.interval)
-	defer ticker.Stop()
+	pollTicker := time.NewTicker(s.pollInterval)
+	defer pollTicker.Stop()
+	postTicker := time.NewTicker(s.postInterval)
+	defer postTicker.Stop()
 
-	s.tick(ctx)
+	s.tickReview(ctx)
+	s.tickPost(ctx)
 
 	for {
 		select {
 		case <-ctx.Done():
-			logs.Info(logs.SystemNamespace, "Scheduler stopping")
+			slog.Info("Scheduler stopping")
 			return
-		case <-ticker.C:
-			s.tick(ctx)
+		case <-pollTicker.C:
+			s.tickReview(ctx)
+		case <-postTicker.C:
+			s.tickPost(ctx)
 		}
 	}
 }
 
+// Worker goroutine reading queued turns and evaluating them synchronously
 func (s *Scheduler) worker(ctx context.Context) {
 	defer s.wg.Done()
 	for {
@@ -101,18 +107,17 @@ func (s *Scheduler) worker(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case t := <-s.queue:
-			turnCtx, cancel := context.WithTimeout(ctx, s.turnTimeout)
-			s.evaluateAgentTurn(turnCtx, t)
-			cancel()
+			s.evaluator.EvaluateAgentTurn(ctx, t)
 		}
 	}
 }
 
-func (s *Scheduler) tick(ctx context.Context) {
+// Triggers review turns for all active agents on the poll interval cadence
+func (s *Scheduler) tickReview(ctx context.Context) {
 	list, err := s.db.AgentsDB.ListActive(ctx)
 	if err != nil || len(list) == 0 {
 		if err != nil {
-			logs.Error(logs.SystemNamespace, fmt.Sprintf("scheduler: list active agents: %v", err))
+			slog.Error("scheduler: list active agents", "error", err)
 		}
 		return
 	}
@@ -122,22 +127,31 @@ func (s *Scheduler) tick(ctx context.Context) {
 		agentMap[a.ID] = a
 	}
 
-	logs.Info(logs.SystemNamespace, fmt.Sprintf("Scheduler review cycle started for %d active agents", len(list)))
+	slog.Info("Scheduler review cycle started", "count", len(list))
 
 	for _, agent := range list {
-		s.submitTurn(ctx, modePost, agent, agentMap, nil)
-	}
-	for _, agent := range list {
-		s.submitTurn(ctx, modeReview, agent, agentMap, nil)
+		s.SubmitTurn(ctx, evaluator.Turn{Mode: evaluator.ModeReview, Agent: agent, AgentMap: agentMap})
 	}
 }
 
-func (s *Scheduler) submitTurn(ctx context.Context, mode turnMode, agent model.Agent, agentMap map[int64]model.Agent, targetPost *model.Post) {
-	if !agent.Active {
+// Triggers main post authoring turns for all active agents on the post interval cadence
+func (s *Scheduler) tickPost(ctx context.Context) {
+	list, err := s.db.AgentsDB.ListActive(ctx)
+	if err != nil || len(list) == 0 {
+		if err != nil {
+			slog.Error("scheduler: list active agents", "error", err)
+		}
 		return
 	}
-	select {
-	case s.queue <- turn{mode: mode, agent: agent, agentMap: agentMap, targetPost: targetPost}:
-	case <-ctx.Done():
+
+	agentMap := make(map[int64]model.Agent, len(list))
+	for _, a := range list {
+		agentMap[a.ID] = a
+	}
+
+	slog.Info("Scheduler post cycle started", "count", len(list))
+
+	for _, agent := range list {
+		s.SubmitTurn(ctx, evaluator.Turn{Mode: evaluator.ModePost, Agent: agent, AgentMap: agentMap})
 	}
 }

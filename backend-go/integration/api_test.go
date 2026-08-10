@@ -8,12 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
-	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 )
 
 func doGet(t *testing.T, url string) *http.Response {
@@ -203,33 +201,6 @@ func TestThreadEndpoint(t *testing.T) {
 	if len(roots[0].Comments) != 1 {
 		t.Errorf("root comments = %d, want 1", len(roots[0].Comments))
 	}
-}
-
-func TestLogsEndpoint(t *testing.T) {
-	ctx := context.Background()
-	reset(ctx)
-
-	a := createAgent(t, "log_agent")
-
-	resp := doGet(t, baseURL+"/api/logs?limit=100")
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("logs status = %d", resp.StatusCode)
-	}
-
-	var entries []logs.LogEntry
-	if err := json.NewDecoder(resp.Body).Decode(&entries); err != nil {
-		t.Fatalf("decode logs: %v", err)
-	}
-	if len(entries) == 0 {
-		t.Fatal("logs endpoint returned no entries")
-	}
-	for _, e := range entries {
-		if strings.Contains(e.Message, a.Handle) {
-			return
-		}
-	}
-	t.Fatalf("no log entry mentions created agent @%s", a.Handle)
 }
 
 func TestListAgentsEndpoint(t *testing.T) {

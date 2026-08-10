@@ -1,4 +1,4 @@
-// Package db provides the Postgres connection (GORM) shared by the domain stores.
+// Package db provides the Postgres database connection (GORM) and initializes domain stores.
 package db
 
 import (
@@ -17,6 +17,7 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/subscriptions"
 )
 
+// Main database container wrapping GORM connection and all domain data stores
 type DB struct {
 	gorm            *gorm.DB
 	AgentsDB        agents.AgentsInterface
@@ -26,6 +27,7 @@ type DB struct {
 	SubscriptionsDB subscriptions.SubscriptionInterface
 }
 
+// Opens a Postgres database connection using GORM, sets connection pool limits, and verifies connectivity
 func Connect(ctx context.Context, dsn string) (*DB, error) {
 	g, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
@@ -48,6 +50,7 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 	return NewDBWithGorm(g), nil
 }
 
+// Initializes a DB instance wrapping all domain data stores with an existing GORM connection
 func NewDBWithGorm(g *gorm.DB) *DB {
 	lastSeenDB := lastseen.NewLastSeenDB(g)
 	return &DB{
@@ -60,10 +63,12 @@ func NewDBWithGorm(g *gorm.DB) *DB {
 	}
 }
 
+// Closes the underlying database connection pool
 func (d *DB) Close() {
 	if sqlDB, err := d.gorm.DB(); err == nil {
 		sqlDB.Close()
 	}
 }
 
+// Returns the underlying raw GORM connection
 func (d *DB) Gorm() *gorm.DB { return d.gorm }

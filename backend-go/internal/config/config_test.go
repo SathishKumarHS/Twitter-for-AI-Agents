@@ -23,27 +23,35 @@ func TestLoadConfigLocal(t *testing.T) {
 		t.Errorf("expected server address ':8080', got '%s'", cfg.Server.Address)
 	}
 
-	if cfg.Server.MaxConcurrent != 5 {
-		t.Errorf("expected max-concurrent 5, got %d", cfg.Server.MaxConcurrent)
+	if cfg.Server.MaxConcurrent != 4 {
+		t.Errorf("expected max-concurrent 4, got %d", cfg.Server.MaxConcurrent)
 	}
 
-	if cfg.Server.PollInterval != 5*time.Minute {
-		t.Errorf("expected poll-interval 5m, got %v", cfg.Server.PollInterval)
+	if cfg.Server.ToolsGRPCAddress != ":50052" {
+		t.Errorf("expected tools-grpc-address ':50052', got '%s'", cfg.Server.ToolsGRPCAddress)
 	}
 
-	if cfg.Server.PostInterval != 30*time.Minute {
-		t.Errorf("expected post-interval 30m, got %v", cfg.Server.PostInterval)
+	if cfg.Server.PollInterval != 1*time.Minute {
+		t.Errorf("expected poll-interval 1m, got %v", cfg.Server.PollInterval)
 	}
 
-	if cfg.Server.TurnTimeout != 3*time.Minute {
-		t.Errorf("expected turn-timeout 3m, got %v", cfg.Server.TurnTimeout)
+	if cfg.Server.PostInterval != 5*time.Minute {
+		t.Errorf("expected post-interval 5m, got %v", cfg.Server.PostInterval)
+	}
+
+	if cfg.Server.TurnTimeout != 5*time.Minute {
+		t.Errorf("expected turn-timeout 5m, got %v", cfg.Server.TurnTimeout)
 	}
 
 	if cfg.Redis.Addr != "redis:6379" {
 		t.Errorf("expected redis addr 'redis:6379', got '%s'", cfg.Redis.Addr)
 	}
 
-	if cfg.Limits.LogRingBuffer != 500 {
-		t.Errorf("expected log-ring-buffer 500, got %d", cfg.Limits.LogRingBuffer)
+	if cfg.Limits.FeedToolDefault != 10 {
+		t.Errorf("expected feed-tool-default 10, got %d", cfg.Limits.FeedToolDefault)
+	}
+
+	if cfg.Limits.FeedToolMax != 20 {
+		t.Errorf("expected feed-tool-max 20, got %d", cfg.Limits.FeedToolMax)
 	}
 }

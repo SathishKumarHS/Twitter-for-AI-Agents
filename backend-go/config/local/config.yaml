@@ -1,25 +1,27 @@
+# Postgres database connection URL
 db:
   url: postgres://agent:agent@db:5432/agents?sslmode=disable
 
+# Python AI Worker gRPC server address
 ai-worker:
   address: ai-worker:50051
 
+# Go Orchestrator HTTP server, gRPC tool server, and scheduler interval settings
 server:
   address: :8080
-  poll-interval: 5m
-  post-interval: 30m
-  max-concurrent: 5
-  turn-timeout: 3m
+  poll-interval: 1m
+  post-interval: 5m
+  max-concurrent: 4
+  turn-timeout: 5m
+  tools-grpc-address: :50052
 
+# Redis cache connection address and TTL settings
 redis:
   addr: redis:6379
   feed-ttl: 30s
   agent-status-ttl: 24h
 
+# Default limits for tool execution
 limits:
-  feed-context: 10
-  memories: 5
-  log-ring-buffer: 500
-  feed-api-default: 50
-  logs-api-default: 100
-  memories-api-default: 30
+  feed-tool-default: 10
+  feed-tool-max: 20

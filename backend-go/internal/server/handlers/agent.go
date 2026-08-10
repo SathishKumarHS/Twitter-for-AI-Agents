@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"github.com/twitter-for-ai-agents/backend-go/internal/events"
-	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
 )
 
@@ -75,7 +75,7 @@ func (h *Handlers) CreateAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.publish(events.Event{Type: events.EventAgentNew, Data: a})
-	logs.AgentInfo(a.ID, a.Name, a.Handle, logs.SystemNamespace, fmt.Sprintf("Created new AI Agent @%s (%s)", a.Handle, a.Name))
+	slog.Info("Created new AI Agent", "agent_id", a.ID, "agent_name", a.Name, "agent_handle", a.Handle)
 	helpers.WriteJSON(w, http.StatusCreated, a)
 }
 
@@ -134,7 +134,7 @@ func (h *Handlers) setAgentActive(w http.ResponseWriter, r *http.Request, active
 	if active {
 		action = "resumed"
 	}
-	logs.Info(logs.SystemNamespace, fmt.Sprintf("Agent #%d (@%s) %s", agent.ID, agent.Handle, action))
+	slog.Info("Agent %s %s", "agent_id", agent.ID, "agent_handle", agent.Handle, "action", action)
 	h.hub.Publish(events.Event{Type: events.EventAgentUpdated, Data: map[string]any{"id": id, "active": active}})
 	helpers.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "active": active})
 }

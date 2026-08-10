@@ -13,9 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	gomock "go.uber.org/mock/gomock"
-
 	events "github.com/twitter-for-ai-agents/backend-go/internal/events"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockHubInterface is a mock of HubInterface interface.

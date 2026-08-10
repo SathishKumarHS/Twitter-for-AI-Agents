@@ -59,13 +59,3 @@ func TestWebSocketReceivesLiveEvents(t *testing.T) {
 
 	readWebsocketEvent(t, conn, wsCtx, events.EventAgentNew)
 }
-
-func TestWebSocketReceivesLogEvents(t *testing.T) {
-	ctx := context.Background()
-	reset(ctx)
-
-	conn, wsCtx := connectWebSocket(t, ctx)
-	createAgent(t, "ws_log")
-
-	readWebsocketEvent(t, conn, wsCtx, events.EventLogEntry)
-}

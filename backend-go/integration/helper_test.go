@@ -17,8 +17,6 @@ import (
 
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/schema"
-	"github.com/twitter-for-ai-agents/backend-go/internal/events"
-	"github.com/twitter-for-ai-agents/backend-go/internal/logs"
 	appredis "github.com/twitter-for-ai-agents/backend-go/internal/redis"
 )
 
@@ -29,7 +27,6 @@ var (
 
 	database *db.DB
 	rc       appredis.RedisInterface
-	hub      events.HubInterface
 	raw      *goredis.Client
 )
 
@@ -63,8 +60,6 @@ func TestMain(m *testing.M) {
 		panic("integration: connect redis: " + err.Error())
 	}
 
-	hub = events.NewHub()
-	logs.Init(hub)
 	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
 
 	reset(ctx)

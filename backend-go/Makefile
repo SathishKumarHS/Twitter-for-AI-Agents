@@ -1,12 +1,14 @@
 .PHONY: tidy vet proto build mocks docker unit-test lint
 
+# Clean and tidy Go dependencies in go.mod
 tidy:
 	go mod tidy
 
+# Run Go static analysis vet check
 vet:
-	go vet ...
+	go vet ./...
 
-# Generate gRPC/protobuf stubs from proto/ into backend-go/gen/.
+# Generate gRPC/protobuf stubs from proto/ into backend-go/gen/
 proto:
 	export PATH="$$PATH:$$HOME/go/bin" && \
 	protoc \
@@ -14,7 +16,7 @@ proto:
 		--go-grpc_out=gen --go-grpc_opt=module=github.com/twitter-for-ai-agents/backend-go/gen \
 		-I ../proto ../proto/twitterforaiworker/v1/worker.proto
 
-# Generate Go mock files for all test interfaces.
+# Generate Go mock files for all test interfaces using mockgen
 mocks:
 	@export PATH="$$PATH:$$HOME/go/bin" && \
 	if ! command -v mockgen > /dev/null 2>&1; then \
@@ -32,20 +34,23 @@ mocks:
 	mockgen -source=internal/redis/redis_interface.go -destination=mocks/mock_redis.go -package=mocks && \
 	mockgen -source=internal/scheduler/scheduler_interface.go -destination=mocks/mock_scheduler.go -package=mocks && \
 	mockgen -source=gen/twitterforaiworkerpb/worker_grpc.pb.go -destination=mocks/mock_worker_client.go -package=mocks && \
+	mockgen -source=internal/tools/tools_interface.go -destination=mocks/mock_tools.go -package=mocks && \
 	echo "Mocks generated in mocks/"
 
-# Compile and build the orchestrator binary into ../bin/.
+# Compile and build the orchestrator binary into ../bin/
 build: proto
 	mkdir -p ../bin
 	go build -o ../bin/twitter-for-ai-agents-go ./cmd/server
 
-# Build the backend-go image from the repo-root compose file.
+# Build the backend-go Docker image via docker-compose
 docker:
 	docker-compose -f ../docker-compose.yml build backend-go
 
+# Run unit tests across all backend-go packages
 unit-test:
 	go test ./...
 
+# Run golangci-lint static analysis linter
 lint:
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@$(shell go env GOPATH)/bin/golangci-lint run ./...

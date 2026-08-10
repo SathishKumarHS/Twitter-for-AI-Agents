@@ -13,10 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 	gomock "go.uber.org/mock/gomock"
 	grpc "google.golang.org/grpc"
-
-	twitterforaiworkerpb "github.com/twitter-for-ai-agents/backend-go/gen/twitterforaiworkerpb"
 )
 
 // MockWorkerClient is a mock of WorkerClient interface.
@@ -44,14 +43,14 @@ func (m *MockWorkerClient) EXPECT() *MockWorkerClientMockRecorder {
 }
 
 // Think mocks base method.
-func (m *MockWorkerClient) Think(ctx context.Context, in *twitterforaiworkerpb.ThinkRequest, opts ...grpc.CallOption) (*twitterforaiworkerpb.ThinkReply, error) {
+func (m *MockWorkerClient) Think(ctx context.Context, in *twitterforaiworkerpb.ThinkRequest, opts ...grpc.CallOption) (*twitterforaiworkerpb.ThinkResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Think", varargs...)
-	ret0, _ := ret[0].(*twitterforaiworkerpb.ThinkReply)
+	ret0, _ := ret[0].(*twitterforaiworkerpb.ThinkResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -88,10 +87,10 @@ func (m *MockWorkerServer) EXPECT() *MockWorkerServerMockRecorder {
 }
 
 // Think mocks base method.
-func (m *MockWorkerServer) Think(arg0 context.Context, arg1 *twitterforaiworkerpb.ThinkRequest) (*twitterforaiworkerpb.ThinkReply, error) {
+func (m *MockWorkerServer) Think(arg0 context.Context, arg1 *twitterforaiworkerpb.ThinkRequest) (*twitterforaiworkerpb.ThinkResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Think", arg0, arg1)
-	ret0, _ := ret[0].(*twitterforaiworkerpb.ThinkReply)
+	ret0, _ := ret[0].(*twitterforaiworkerpb.ThinkResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -148,4 +147,135 @@ func (m *MockUnsafeWorkerServer) mustEmbedUnimplementedWorkerServer() {
 func (mr *MockUnsafeWorkerServerMockRecorder) mustEmbedUnimplementedWorkerServer() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "mustEmbedUnimplementedWorkerServer", reflect.TypeOf((*MockUnsafeWorkerServer)(nil).mustEmbedUnimplementedWorkerServer))
+}
+
+// MockToolExecutorClient is a mock of ToolExecutorClient interface.
+type MockToolExecutorClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockToolExecutorClientMockRecorder
+	isgomock struct{}
+}
+
+// MockToolExecutorClientMockRecorder is the mock recorder for MockToolExecutorClient.
+type MockToolExecutorClientMockRecorder struct {
+	mock *MockToolExecutorClient
+}
+
+// NewMockToolExecutorClient creates a new mock instance.
+func NewMockToolExecutorClient(ctrl *gomock.Controller) *MockToolExecutorClient {
+	mock := &MockToolExecutorClient{ctrl: ctrl}
+	mock.recorder = &MockToolExecutorClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockToolExecutorClient) EXPECT() *MockToolExecutorClientMockRecorder {
+	return m.recorder
+}
+
+// ExecuteTool mocks base method.
+func (m *MockToolExecutorClient) ExecuteTool(ctx context.Context, in *twitterforaiworkerpb.ToolCall, opts ...grpc.CallOption) (*twitterforaiworkerpb.ToolResult, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ExecuteTool", varargs...)
+	ret0, _ := ret[0].(*twitterforaiworkerpb.ToolResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteTool indicates an expected call of ExecuteTool.
+func (mr *MockToolExecutorClientMockRecorder) ExecuteTool(ctx, in any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockToolExecutorClient)(nil).ExecuteTool), varargs...)
+}
+
+// MockToolExecutorServer is a mock of ToolExecutorServer interface.
+type MockToolExecutorServer struct {
+	ctrl     *gomock.Controller
+	recorder *MockToolExecutorServerMockRecorder
+	isgomock struct{}
+}
+
+// MockToolExecutorServerMockRecorder is the mock recorder for MockToolExecutorServer.
+type MockToolExecutorServerMockRecorder struct {
+	mock *MockToolExecutorServer
+}
+
+// NewMockToolExecutorServer creates a new mock instance.
+func NewMockToolExecutorServer(ctrl *gomock.Controller) *MockToolExecutorServer {
+	mock := &MockToolExecutorServer{ctrl: ctrl}
+	mock.recorder = &MockToolExecutorServerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockToolExecutorServer) EXPECT() *MockToolExecutorServerMockRecorder {
+	return m.recorder
+}
+
+// ExecuteTool mocks base method.
+func (m *MockToolExecutorServer) ExecuteTool(arg0 context.Context, arg1 *twitterforaiworkerpb.ToolCall) (*twitterforaiworkerpb.ToolResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteTool", arg0, arg1)
+	ret0, _ := ret[0].(*twitterforaiworkerpb.ToolResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteTool indicates an expected call of ExecuteTool.
+func (mr *MockToolExecutorServerMockRecorder) ExecuteTool(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockToolExecutorServer)(nil).ExecuteTool), arg0, arg1)
+}
+
+// mustEmbedUnimplementedToolExecutorServer mocks base method.
+func (m *MockToolExecutorServer) mustEmbedUnimplementedToolExecutorServer() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "mustEmbedUnimplementedToolExecutorServer")
+}
+
+// mustEmbedUnimplementedToolExecutorServer indicates an expected call of mustEmbedUnimplementedToolExecutorServer.
+func (mr *MockToolExecutorServerMockRecorder) mustEmbedUnimplementedToolExecutorServer() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "mustEmbedUnimplementedToolExecutorServer", reflect.TypeOf((*MockToolExecutorServer)(nil).mustEmbedUnimplementedToolExecutorServer))
+}
+
+// MockUnsafeToolExecutorServer is a mock of UnsafeToolExecutorServer interface.
+type MockUnsafeToolExecutorServer struct {
+	ctrl     *gomock.Controller
+	recorder *MockUnsafeToolExecutorServerMockRecorder
+	isgomock struct{}
+}
+
+// MockUnsafeToolExecutorServerMockRecorder is the mock recorder for MockUnsafeToolExecutorServer.
+type MockUnsafeToolExecutorServerMockRecorder struct {
+	mock *MockUnsafeToolExecutorServer
+}
+
+// NewMockUnsafeToolExecutorServer creates a new mock instance.
+func NewMockUnsafeToolExecutorServer(ctrl *gomock.Controller) *MockUnsafeToolExecutorServer {
+	mock := &MockUnsafeToolExecutorServer{ctrl: ctrl}
+	mock.recorder = &MockUnsafeToolExecutorServerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUnsafeToolExecutorServer) EXPECT() *MockUnsafeToolExecutorServerMockRecorder {
+	return m.recorder
+}
+
+// mustEmbedUnimplementedToolExecutorServer mocks base method.
+func (m *MockUnsafeToolExecutorServer) mustEmbedUnimplementedToolExecutorServer() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "mustEmbedUnimplementedToolExecutorServer")
+}
+
+// mustEmbedUnimplementedToolExecutorServer indicates an expected call of mustEmbedUnimplementedToolExecutorServer.
+func (mr *MockUnsafeToolExecutorServerMockRecorder) mustEmbedUnimplementedToolExecutorServer() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "mustEmbedUnimplementedToolExecutorServer", reflect.TypeOf((*MockUnsafeToolExecutorServer)(nil).mustEmbedUnimplementedToolExecutorServer))
 }

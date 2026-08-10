@@ -8,17 +8,15 @@ import (
 
 func TestToProtoAgent(t *testing.T) {
 	agent := model.Agent{
-		ID:           10,
-		Handle:       "tech_bot",
-		Name:         "Tech Bot",
-		Persona:      "Tech Enthusiast",
-		Goals:        []string{"Share news", "Help users"},
-		Policies:     []string{"No spam"},
-		Interests:    []string{"Go", "AI"},
-		AvatarURL:    "https://example.com/avatar.png",
-		Active:       true,
-		Description:  "AI news poster",
-		Instructions: "Post about technology",
+		ID:        10,
+		Handle:    "tech_bot",
+		Name:      "Tech Bot",
+		Persona:   "Tech Enthusiast",
+		Goals:     []string{"Share news", "Help users"},
+		Policies:  []string{"No spam"},
+		Interests: []string{"Go", "AI"},
+		AvatarURL: "https://example.com/avatar.png",
+		Active:    true,
 	}
 
 	pbAgent := toProtoAgent(agent)
@@ -50,12 +48,6 @@ func TestToProtoAgent(t *testing.T) {
 	if !pbAgent.Active {
 		t.Errorf("expected Active true, got false")
 	}
-	if pbAgent.Description != "AI news poster" {
-		t.Errorf("expected Description 'AI news poster', got '%s'", pbAgent.Description)
-	}
-	if pbAgent.Instructions != "Post about technology" {
-		t.Errorf("expected Instructions 'Post about technology', got '%s'", pbAgent.Instructions)
-	}
 }
 
 func TestToProtoPost(t *testing.T) {
@@ -63,20 +55,18 @@ func TestToProtoPost(t *testing.T) {
 	rootID := int64(1)
 
 	post := model.Post{
-		ID:       100,
-		AgentID:  2,
-		Body:     "Test reply body",
-		Kind:     "reply",
-		ParentID: &parentID,
-		RootID:   &rootID,
-		Mentions: []int64{10},
+		ID:           100,
+		AgentID:      2,
+		Body:         "Test reply body",
+		Kind:         "reply",
+		ParentID:     &parentID,
+		RootID:       &rootID,
+		Mentions:     []int64{10},
+		AuthorHandle: "alice",
+		AuthorName:   "Alice Smith",
 	}
 
-	agentMap := map[int64]model.Agent{
-		2: {ID: 2, Handle: "alice", Name: "Alice Smith"},
-	}
-
-	pbPost := toProtoPost(post, agentMap)
+	pbPost := toProtoPost(post)
 
 	if pbPost.Id != 100 {
 		t.Errorf("expected Id 100, got %d", pbPost.Id)
@@ -106,7 +96,7 @@ func TestToProtoPost(t *testing.T) {
 		t.Errorf("expected AuthorName 'Alice Smith', got '%s'", pbPost.AuthorName)
 	}
 
-	// Test Nil ParentID and RootID, and missing agent in map
+	// Test Nil ParentID and RootID, and no author decoration
 	postNil := model.Post{
 		ID:      101,
 		AgentID: 99,
@@ -114,7 +104,7 @@ func TestToProtoPost(t *testing.T) {
 		Kind:    "post",
 	}
 
-	pbPostNil := toProtoPost(postNil, agentMap)
+	pbPostNil := toProtoPost(postNil)
 	if pbPostNil.ParentId != 0 {
 		t.Errorf("expected ParentId 0 for nil parent, got %d", pbPostNil.ParentId)
 	}
@@ -122,6 +112,6 @@ func TestToProtoPost(t *testing.T) {
 		t.Errorf("expected RootId 0 for nil root, got %d", pbPostNil.RootId)
 	}
 	if pbPostNil.AuthorHandle != "" || pbPostNil.AuthorName != "" {
-		t.Errorf("expected empty author handle and name when missing in map")
+		t.Errorf("expected empty author handle and name when not decorated")
 	}
 }

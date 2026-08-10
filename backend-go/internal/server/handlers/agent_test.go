@@ -22,6 +22,7 @@ func TestCreateAgentSuccess(t *testing.T) {
 
 	mockAgents := mocks.NewMockAgentsInterface(ctrl)
 	mockHub := mocks.NewMockHubInterface(ctrl)
+	mockRedis := mocks.NewMockRedisInterface(ctrl)
 
 	mockAgents.EXPECT().GetByHandle(gomock.Any(), "brand_bot").Return(nil, dberrors.ErrNotFound)
 	mockAgents.EXPECT().Create(gomock.Any(), gomock.Any()).Return(int64(100), nil)
@@ -38,7 +39,7 @@ func TestCreateAgentSuccess(t *testing.T) {
 
 	mockHub.EXPECT().Publish(gomock.Any()).AnyTimes()
 
-	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, nil)
+	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, mockRedis)
 
 	reqBody := CreateAgentReq{
 		Handle:    "brand_bot",

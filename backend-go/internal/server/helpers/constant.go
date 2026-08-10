@@ -9,7 +9,6 @@ const (
 
 	DefaultFeedLimit = 50
 	MaxFeedLimit     = 200
-	DefaultLogsLimit = 100
 )
 
 var CachedFeedLimits = []int{20, 50, 100}

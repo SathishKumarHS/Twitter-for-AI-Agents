@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
@@ -14,7 +15,23 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/mocks"
 )
 
-func TestDispatcher_ThinkSuccess(t *testing.T) {
+type actResult struct {
+	decision *dispatch.Decision
+	err      error
+}
+
+func awaitAct(t *testing.T, ch <-chan actResult) (*dispatch.Decision, error) {
+	t.Helper()
+	select {
+	case res := <-ch:
+		return res.decision, res.err
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for the Act reply handler")
+		return nil, nil
+	}
+}
+
+func TestDispatcher_ActMapsDecision(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -22,16 +39,12 @@ func TestDispatcher_ThinkSuccess(t *testing.T) {
 	dispatcher := dispatch.NewWithClient(mockClient)
 
 	agent := model.Agent{ID: 1, Handle: "test_bot", Name: "Test Bot"}
-	post := model.Post{ID: 10, AgentID: 2, Body: "Hello world"}
-	recent := []model.Post{{ID: 5, AgentID: 1, Body: "Previous post"}}
-	memories := []string{"memory 1"}
-	agentMap := map[int64]model.Agent{
-		1: agent,
-		2: {ID: 2, Handle: "user2", Name: "User Two"},
-	}
+	// The scheduler decorates the target post's author; the dispatcher must pass
+	// it through to the worker.
+	post := model.Post{ID: 10, AgentID: 2, Body: "Hello", AuthorHandle: "user2", AuthorName: "User Two"}
 
 	mockClient.EXPECT().Think(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, req *twitterforaiworkerpb.ThinkRequest, opts ...grpc.CallOption) (*twitterforaiworkerpb.ThinkReply, error) {
+		func(ctx context.Context, req *twitterforaiworkerpb.ThinkRequest, opts ...grpc.CallOption) (*twitterforaiworkerpb.ThinkResponse, error) {
 			if req.Mode != "respond" {
 				t.Errorf("expected mode 'respond', got '%s'", req.Mode)
 			}
@@ -41,34 +54,30 @@ func TestDispatcher_ThinkSuccess(t *testing.T) {
 			if req.Post.Id != 10 {
 				t.Errorf("expected post id 10, got %d", req.Post.Id)
 			}
-			if len(req.Recent) != 1 || req.Recent[0].Id != 5 {
-				t.Errorf("unexpected recent posts in request")
+			if req.Post.AuthorHandle != "user2" {
+				t.Errorf("expected decorated author handle on the request post, got %q", req.Post.AuthorHandle)
 			}
-			if len(req.Memories) != 1 || req.Memories[0] != "memory 1" {
-				t.Errorf("unexpected memories in request")
-			}
-
-			return &twitterforaiworkerpb.ThinkReply{
-				Action: "reply",
-				Text:   "Nice to meet you!",
+			return &twitterforaiworkerpb.ThinkResponse{
+				Executed: false,
 			}, nil
 		},
-	)
+	).Times(1)
 
-	decision, err := dispatcher.Think(context.Background(), agent, post, recent, memories, agentMap)
+	ch := make(chan actResult, 1)
+	dispatcher.Act(context.Background(), dispatch.ModeRespond, agent, post, func(decision *dispatch.Decision, err error) {
+		ch <- actResult{decision: decision, err: err}
+	})
+
+	decision, err := awaitAct(t, ch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if decision.Action != dispatch.ActionReply {
-		t.Errorf("expected action 'reply', got '%s'", decision.Action)
-	}
-	if decision.Text != "Nice to meet you!" {
-		t.Errorf("expected text 'Nice to meet you!', got '%s'", decision.Text)
+	if decision.Executed {
+		t.Errorf("expected Executed=false, got true")
 	}
 }
 
-func TestDispatcher_ProactiveSuccess(t *testing.T) {
+func TestDispatcher_ActSurfacesExecuted(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -76,36 +85,26 @@ func TestDispatcher_ProactiveSuccess(t *testing.T) {
 	dispatcher := dispatch.NewWithClient(mockClient)
 
 	agent := model.Agent{ID: 1, Handle: "test_bot", Name: "Test Bot"}
-	recent := []model.Post{}
-	memories := []string{}
-	agentMap := map[int64]model.Agent{1: agent}
 
-	mockClient.EXPECT().Think(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, req *twitterforaiworkerpb.ThinkRequest, opts ...grpc.CallOption) (*twitterforaiworkerpb.ThinkReply, error) {
-			if req.Mode != "proactive" {
-				t.Errorf("expected mode 'proactive', got '%s'", req.Mode)
-			}
-			return &twitterforaiworkerpb.ThinkReply{
-				Action: "post",
-				Text:   "Proactive AI tweet!",
-			}, nil
-		},
-	)
+	mockClient.EXPECT().Think(gomock.Any(), gomock.Any()).Return(&twitterforaiworkerpb.ThinkResponse{
+		Executed: true,
+	}, nil)
 
-	decision, err := dispatcher.Proactive(context.Background(), agent, recent, memories, agentMap)
+	ch := make(chan actResult, 1)
+	dispatcher.Act(context.Background(), dispatch.ModeProactive, agent, model.Post{}, func(decision *dispatch.Decision, err error) {
+		ch <- actResult{decision: decision, err: err}
+	})
+
+	decision, err := awaitAct(t, ch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if decision.Action != dispatch.ActionPost {
-		t.Errorf("expected action 'post', got '%s'", decision.Action)
-	}
-	if decision.Text != "Proactive AI tweet!" {
-		t.Errorf("expected text 'Proactive AI tweet!', got '%s'", decision.Text)
+	if !decision.Executed {
+		t.Fatalf("expected Executed=true when the worker already acted")
 	}
 }
 
-func TestDispatcher_ThinkError(t *testing.T) {
+func TestDispatcher_ActError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -116,7 +115,12 @@ func TestDispatcher_ThinkError(t *testing.T) {
 
 	mockClient.EXPECT().Think(gomock.Any(), gomock.Any()).Return(nil, errors.New("gRPC connection failed"))
 
-	decision, err := dispatcher.Think(context.Background(), agent, model.Post{}, nil, nil, nil)
+	ch := make(chan actResult, 1)
+	dispatcher.Act(context.Background(), dispatch.ModeRespond, agent, model.Post{}, func(decision *dispatch.Decision, err error) {
+		ch <- actResult{decision: decision, err: err}
+	})
+
+	decision, err := awaitAct(t, ch)
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}

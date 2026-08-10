@@ -1,3 +1,4 @@
+// Package subscriptions implements storage and query operations for thread subscribers.
 package subscriptions
 
 import (
@@ -8,14 +9,17 @@ import (
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 )
 
+// GORM-backed storage implementation for thread subscriptions
 type SubscriptionDB struct {
 	g *gorm.DB
 }
 
+// Instantiates a new SubscriptionDB store implementing SubscriptionInterface
 func NewSubscriptionDB(g *gorm.DB) SubscriptionInterface {
 	return &SubscriptionDB{g: g}
 }
 
+// Subscribes an agent to a conversation thread if not already subscribed
 func (s *SubscriptionDB) Subscribe(ctx context.Context, agentID, rootPostID int64) error {
 	return s.g.WithContext(ctx).
 		Where("agent_id = ? AND root_post_id = ?", agentID, rootPostID).
@@ -23,6 +27,7 @@ func (s *SubscriptionDB) Subscribe(ctx context.Context, agentID, rootPostID int6
 		Error
 }
 
+// Lists all subscriber agent IDs subscribed to a specified root post thread
 func (s *SubscriptionDB) ListSubscribers(ctx context.Context, rootPostID int64) ([]int64, error) {
 	var ids []int64
 	err := s.g.WithContext(ctx).

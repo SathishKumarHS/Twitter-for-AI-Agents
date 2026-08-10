@@ -1,3 +1,4 @@
+// Package websocket implements the WebSocket server for streaming real-time network events to clients.
 package websocket
 
 import (
@@ -16,15 +17,17 @@ const (
 	writeTimeout = 5 * time.Second
 )
 
-// Server manages live event streaming over WebSockets to UI clients.
+// WebSocket server handling client connection upgrades and event streaming
 type Server struct {
 	hub events.HubInterface
 }
 
+// Instantiates a new WebSocket server using the provided event hub
 func New(hub events.HubInterface) *Server {
 	return &Server{hub: hub}
 }
 
+// Upgrades HTTP requests to WebSockets and streams real-time events to connected clients
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},
@@ -43,6 +46,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sub := s.hub.SubscribeWithContext(ctx)
 	defer s.hub.Unsubscribe(sub)
 
+	// Keepalive ping loop
 	go func() {
 		ticker := time.NewTicker(pingInterval)
 		defer ticker.Stop()
@@ -59,6 +63,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// Connection read loop to detect client disconnects
 	closeCh := make(chan struct{})
 	go func() {
 		defer close(closeCh)
@@ -70,6 +75,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// Event broadcast loop sending JSON events to the connected WebSocket client
 	for {
 		select {
 		case <-ctx.Done():
