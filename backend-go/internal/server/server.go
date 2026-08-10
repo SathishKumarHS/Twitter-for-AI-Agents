@@ -22,11 +22,11 @@ type Server struct {
 	server          *http.Server
 }
 
-// Instantiates a new Server with database, event hub, and redis dependencies
-func New(addr string, db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface) *Server {
+// Instantiates a new Server with database, event hub, redis, and evaluator dependencies
+func New(addr string, db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface, eval handlers.EvaluatorInterface) *Server {
 	return &Server{
 		address:         addr,
-		handlers:        handlers.New(db, hub, redisClient),
+		handlers:        handlers.New(db, hub, redisClient, eval),
 		websocketServer: websocket.New(hub),
 	}
 }

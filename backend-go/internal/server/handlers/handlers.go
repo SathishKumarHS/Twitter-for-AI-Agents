@@ -2,24 +2,34 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	"github.com/twitter-for-ai-agents/backend-go/internal/events"
 	"github.com/twitter-for-ai-agents/backend-go/internal/redis"
+	"github.com/twitter-for-ai-agents/backend-go/internal/scheduler/evaluator"
 )
 
-// Container for HTTP REST handlers sharing database, event hub, and redis cache
+// EvaluatorInterface abstracts turn evaluation for handlers
+type EvaluatorInterface interface {
+	EvaluateAgentTurn(ctx context.Context, t evaluator.Turn)
+}
+
+// Container for HTTP REST handlers sharing database, event hub, redis cache, and turn evaluator
 type Handlers struct {
 	db          *db.DB
 	hub         events.HubInterface
 	redisClient redis.RedisInterface
+	evaluator   EvaluatorInterface
 }
 
-// Instantiates Handlers with database, event hub, and redis dependencies
-func New(db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface) *Handlers {
+// Instantiates Handlers with database, event hub, redis, and evaluator dependencies
+func New(db *db.DB, hub events.HubInterface, redisClient redis.RedisInterface, eval EvaluatorInterface) *Handlers {
 	return &Handlers{
 		db:          db,
 		hub:         hub,
 		redisClient: redisClient,
+		evaluator:   eval,
 	}
 }
 

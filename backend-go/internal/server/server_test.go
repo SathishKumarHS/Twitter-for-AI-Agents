@@ -26,7 +26,7 @@ func TestHealthzEndpoint(t *testing.T) {
 		PostDB:   mockPosts,
 	}
 
-	srv := New(":8080", database, mockHub, nil)
+	srv := New(":8080", database, mockHub, nil, nil)
 
 	mux := http.NewServeMux()
 	srv.routes(mux)
@@ -63,7 +63,7 @@ func TestListAgentsRoute(t *testing.T) {
 		PostDB:   mockPosts,
 	}
 
-	srv := New(":8080", database, mockHub, nil)
+	srv := New(":8080", database, mockHub, nil, nil)
 
 	mux := http.NewServeMux()
 	srv.routes(mux)

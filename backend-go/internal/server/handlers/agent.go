@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,10 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
 	"github.com/twitter-for-ai-agents/backend-go/internal/events"
+	"github.com/twitter-for-ai-agents/backend-go/internal/scheduler/evaluator"
 	"github.com/twitter-for-ai-agents/backend-go/internal/server/helpers"
 )
 
@@ -75,6 +78,19 @@ func (h *Handlers) CreateAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.publish(events.Event{Type: events.EventAgentNew, Data: a})
+
+	// Trigger an immediate initial turn for the new agent asynchronously
+	if h.evaluator != nil {
+		go func(agent model.Agent) {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+			h.evaluator.EvaluateAgentTurn(ctx, evaluator.Turn{
+				Mode:  evaluator.ModePost,
+				Agent: agent,
+			})
+		}(*a)
+	}
+
 	slog.Info("Created new AI Agent", "agent_id", a.ID, "agent_name", a.Name, "agent_handle", a.Handle)
 	helpers.WriteJSON(w, http.StatusCreated, a)
 }

@@ -2,17 +2,20 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"go.uber.org/mock/gomock"
 
 	"github.com/twitter-for-ai-agents/backend-go/internal/db"
 	dberrors "github.com/twitter-for-ai-agents/backend-go/internal/db/db_errors"
 	"github.com/twitter-for-ai-agents/backend-go/internal/db/model"
+	"github.com/twitter-for-ai-agents/backend-go/internal/scheduler/evaluator"
 	"github.com/twitter-for-ai-agents/backend-go/mocks"
 )
 
@@ -39,7 +42,7 @@ func TestCreateAgentSuccess(t *testing.T) {
 
 	mockHub.EXPECT().Publish(gomock.Any()).AnyTimes()
 
-	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, mockRedis)
+	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, mockRedis, nil)
 
 	reqBody := CreateAgentReq{
 		Handle:    "brand_bot",
@@ -66,7 +69,7 @@ func TestCreateAgentSuccess(t *testing.T) {
 }
 
 func TestCreateAgentBadRequest(t *testing.T) {
-	h := New(&db.DB{}, nil, nil)
+	h := New(&db.DB{}, nil, nil, nil)
 
 	reqBody := CreateAgentReq{Handle: "bot"}
 	b, _ := json.Marshal(reqBody)
@@ -98,7 +101,7 @@ func TestCreateAgentValidation(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			h := New(&db.DB{}, nil, nil)
+			h := New(&db.DB{}, nil, nil, nil)
 			b, _ := json.Marshal(tc.req)
 			rec := httptest.NewRecorder()
 			h.CreateAgent(rec, httptest.NewRequest("POST", "/api/agents", bytes.NewReader(b)))
@@ -127,7 +130,7 @@ func TestCreateAgentHandleNormalized(t *testing.T) {
 	mockAgents.EXPECT().Get(gomock.Any(), int64(100)).Return(&model.Agent{ID: 100, Handle: "brand_bot"}, nil)
 	mockHub.EXPECT().Publish(gomock.Any()).AnyTimes()
 
-	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, nil)
+	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, nil, nil)
 
 	reqBody := CreateAgentReq{Handle: "  @brand_bot ", Name: "Brand Bot", Persona: "Friendly"}
 	b, _ := json.Marshal(reqBody)
@@ -147,7 +150,7 @@ func TestCreateAgentDuplicateHandle(t *testing.T) {
 	mockAgents := mocks.NewMockAgentsInterface(ctrl)
 	mockAgents.EXPECT().GetByHandle(gomock.Any(), "brand_bot").Return(&model.Agent{ID: 1, Handle: "brand_bot"}, nil)
 
-	h := New(&db.DB{AgentsDB: mockAgents}, nil, nil)
+	h := New(&db.DB{AgentsDB: mockAgents}, nil, nil, nil)
 
 	reqBody := CreateAgentReq{Handle: "brand_bot", Name: "Brand Bot", Persona: "Friendly"}
 	b, _ := json.Marshal(reqBody)
@@ -177,7 +180,7 @@ func TestPauseAndResumeAgent(t *testing.T) {
 
 	mockHub.EXPECT().Publish(gomock.Any()).Times(2)
 
-	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, mockRedis)
+	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, mockRedis, nil)
 
 	// Test PauseAgent
 	reqPause := httptest.NewRequest("POST", "/api/agents/1/pause", nil)
@@ -199,5 +202,63 @@ func TestPauseAndResumeAgent(t *testing.T) {
 
 	if recResume.Code != http.StatusOK {
 		t.Fatalf("expected status 200 OK on resume, got %d", recResume.Code)
+	}
+}
+
+type fakeEvaluator struct {
+	turns chan evaluator.Turn
+}
+
+func (f *fakeEvaluator) EvaluateAgentTurn(_ context.Context, t evaluator.Turn) {
+	f.turns <- t
+}
+
+func TestCreateAgentTriggersEvaluator(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAgents := mocks.NewMockAgentsInterface(ctrl)
+	mockHub := mocks.NewMockHubInterface(ctrl)
+
+	mockAgents.EXPECT().GetByHandle(gomock.Any(), "eval_bot").Return(nil, dberrors.ErrNotFound)
+	mockAgents.EXPECT().Create(gomock.Any(), gomock.Any()).Return(int64(200), nil)
+	mockAgents.EXPECT().Get(gomock.Any(), int64(200)).Return(&model.Agent{
+		ID:     200,
+		Handle: "eval_bot",
+		Name:   "Eval Bot",
+		Active: true,
+	}, nil)
+
+	mockHub.EXPECT().Publish(gomock.Any()).AnyTimes()
+
+	fakeEval := &fakeEvaluator{turns: make(chan evaluator.Turn, 1)}
+	h := New(&db.DB{AgentsDB: mockAgents}, mockHub, nil, fakeEval)
+
+	reqBody := CreateAgentReq{
+		Handle:  "eval_bot",
+		Name:    "Eval Bot",
+		Persona: "Tester",
+	}
+	b, _ := json.Marshal(reqBody)
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(b))
+
+	h.CreateAgent(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201 Created, got %d", rec.Code)
+	}
+
+	select {
+	case turn := <-fakeEval.turns:
+		if turn.Agent.ID != 200 {
+			t.Fatalf("expected agent ID 200, got %d", turn.Agent.ID)
+		}
+		if turn.Mode != evaluator.ModePost {
+			t.Fatalf("expected turn mode %s, got %s", evaluator.ModePost, turn.Mode)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatalf("timed out waiting for EvaluateAgentTurn call")
 	}
 }

@@ -74,7 +74,7 @@ func main() {
 	sched.Start(ctx)
 	defer sched.Stop()
 
-	srv := server.New(cfg.Server.Address, db, hub, redisClient)
+	srv := server.New(cfg.Server.Address, db, hub, redisClient, eval)
 	go func() {
 		slog.Info("HTTP server started listening", "address", cfg.Server.Address)
 		if err := srv.ListenAndServe(); err != nil {

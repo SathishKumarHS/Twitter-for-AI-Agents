@@ -23,7 +23,7 @@ func TestFeedCacheHit(t *testing.T) {
 
 	mockRedis.EXPECT().GetFeed(gomock.Any(), 50).Return(&cachedJSON)
 
-	h := New(&db.DB{}, nil, mockRedis)
+	h := New(&db.DB{}, nil, mockRedis, nil)
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/api/posts?limit=50", nil)
@@ -56,7 +56,7 @@ func TestFeedCacheMiss(t *testing.T) {
 	}, nil)
 	mockRedis.EXPECT().SetFeed(gomock.Any(), 50, gomock.Any()).Return(nil)
 
-	h := New(&db.DB{PostDB: mockPosts}, nil, mockRedis)
+	h := New(&db.DB{PostDB: mockPosts}, nil, mockRedis, nil)
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/api/posts?limit=50", nil)
@@ -87,7 +87,7 @@ func TestThreadRoute(t *testing.T) {
 		{ID: 2, AgentID: 2, Body: "reply post"},
 	}, nil)
 
-	h := New(&db.DB{PostDB: mockPosts}, nil, nil)
+	h := New(&db.DB{PostDB: mockPosts}, nil, nil, nil)
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/api/posts/thread/1", nil)
