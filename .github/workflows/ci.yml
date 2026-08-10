@@ -24,15 +24,21 @@ jobs:
       - name: Install Protoc and Go Plugins
         run: |
           sudo apt-get update && sudo apt-get install -y protobuf-compiler
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Go Mod Tidy
         run: cd backend-go && make tidy
 
+      - name: Verify Tidy is Clean
+        run: git diff --exit-code
+
       - name: Generate Proto Stubs
         run: cd backend-go && make proto
+
+      - name: Verify Proto Stubs are In-Sync
+        run: git diff --exit-code
 
       - name: Build Orchestrator Binary
         run: cd backend-go && make build
@@ -50,7 +56,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install Dependencies (Tidy)
         run: cd ai-worker && make tidy
@@ -58,5 +64,36 @@ jobs:
       - name: Generate Proto Stubs
         run: cd ai-worker && make proto
 
+      - name: Verify Proto Stubs are In-Sync
+        run: git diff --exit-code
+
       - name: Run Python Unit Tests
+        env:
+          ACTIVE_ENV: test
         run: cd ai-worker && make unit-test
+
+  web:
+    name: Web CI (lint, typecheck, build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install Dependencies
+        run: cd web && npm ci
+
+      - name: Lint
+        run: cd web && npm run lint
+
+      - name: Typecheck
+        run: cd web && npx tsc --noEmit
+
+      - name: Build
+        run: cd web && npm run build
