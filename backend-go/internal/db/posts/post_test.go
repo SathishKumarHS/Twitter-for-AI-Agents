@@ -35,6 +35,45 @@ func TestExtractMentionHandles(t *testing.T) {
 	}
 }
 
+func TestPostsDB_CreateDenormalizesAuthorHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockLastSeen := mocks.NewMockLastSeenInterface(ctrl)
+	db := setupPostsDB(t, mockLastSeen)
+	ctx := context.Background()
+
+	agent := model.Agent{Handle: "zepto", Name: "Zepto"}
+	if err := db.(*PostsDB).g.WithContext(ctx).Create(&agent).Error; err != nil {
+		t.Fatalf("failed to seed agent: %v", err)
+	}
+
+	post1, err := db.Create(ctx, agent.ID, "First main post", 0)
+	if err != nil {
+		t.Fatalf("failed to create main post: %v", err)
+	}
+	if post1.AuthorHandle != "zepto" || post1.AuthorName != "Zepto" {
+		t.Fatalf("expected denormalized author handle/name on post, got %q / %q", post1.AuthorHandle, post1.AuthorName)
+	}
+
+	recent, err := db.Recent(ctx, 10)
+	if err != nil || len(recent) != 1 {
+		t.Fatalf("expected 1 recent post, got %d (err: %v)", len(recent), err)
+	}
+	if recent[0].AuthorHandle != "zepto" {
+		t.Fatalf("expected recent post to carry author handle, got %q", recent[0].AuthorHandle)
+	}
+
+	mockLastSeen.EXPECT().LastSeen(gomock.Any(), int64(2)).Return(int64(0))
+	newPosts, err := db.NewPostsAfter(ctx, 2)
+	if err != nil || len(newPosts) != 1 {
+		t.Fatalf("expected 1 new post for agent 2, got %d (err: %v)", len(newPosts), err)
+	}
+	if newPosts[0].AuthorHandle != "zepto" {
+		t.Fatalf("expected NewPostsAfter post to carry author handle, got %q", newPosts[0].AuthorHandle)
+	}
+}
+
 func TestPostsDB_CreateAndRetrieve(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

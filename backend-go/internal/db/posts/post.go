@@ -53,6 +53,15 @@ func (s *PostsDB) Create(ctx context.Context, agentID int64, body string, parent
 		p.RootID = root
 	}
 
+	var author struct {
+		Handle string
+		Name   string
+	}
+	if err := s.g.WithContext(ctx).Table("agents").Where("id = ?", agentID).Scan(&author).Error; err == nil {
+		p.AuthorHandle = author.Handle
+		p.AuthorName = author.Name
+	}
+
 	handles := extractMentionHandles(body)
 	if len(handles) > 0 {
 		var mentionIDs []int64
